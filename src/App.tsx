@@ -17,7 +17,9 @@ import {
   ChevronRight, 
   ShieldCheck,
   Loader2,
-  FileText
+  FileText,
+  Eye,
+  PenLine
 } from 'lucide-react';
 import { auth, getDailyReportFirebase, saveDailyReportFirebase, getUserProfileFirebase } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -33,7 +35,7 @@ import type { ShiftKey } from './shiftUtils';
 import { DEFAULT_MACHINES } from './constants/machines';
 import { PasswordUnlockModal } from './components/PasswordUnlockModal';
 import { LoginModal } from './components/LoginModal';
-import { PrintReportView } from './components/PrintReportView';
+import { MachineMatrixView } from './components/MachineMatrixView';
 
 const getEmptyShift = (): ShiftReport => ({
   operatorName: '',
@@ -42,6 +44,9 @@ const getEmptyShift = (): ShiftReport => ({
 });
 
 export default function App() {
+  // Modo de visualização: 'READ' (Modo Leitura / Painel Todas as Máquinas) ou 'EDIT' (Preenchimento do Turno)
+  const [viewMode, setViewMode] = useState<'READ' | 'EDIT'>('READ');
+
   // Data e Turno selecionados
   const [selectedDate, setSelectedDate] = useState<string>(() => getLocalDateString());
   const [activeShift, setActiveShift] = useState<ShiftKey>(() => getCurrentActiveShift());
@@ -289,46 +294,76 @@ export default function App() {
             </div>
           </div>
 
+          {/* Seletor de Modo: Leitura vs Preenchimento */}
+          <div className="flex items-center p-1 bg-slate-950 border border-slate-800 rounded-xl">
+            <button
+              onClick={() => setViewMode('READ')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'READ'
+                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+              title="Visualizar todas as máquinas preenchidas nos 3 turnos"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Modo Leitura</span>
+            </button>
+            <button
+              onClick={() => setViewMode('EDIT')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'EDIT'
+                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+              title="Preencher apontamentos e ocorrências do turno"
+            >
+              <PenLine className="w-3.5 h-3.5" />
+              <span>Preencher Turno</span>
+            </button>
+          </div>
+
           {/* Ações do Topo */}
           <div className="flex items-center gap-2">
             {/* Botão de Impressão */}
             <button
               onClick={() => window.print()}
               disabled={!report || loading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
-              title="Imprimir relatório diário em PDF / Impressora"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
+              title="Imprimir relatório diário completo em A4 Paisagem"
             >
-              <Printer className="w-4 h-4 text-slate-400" />
-              <span className="hidden sm:inline">Imprimir</span>
+              <Printer className="w-4 h-4 text-cyan-400" />
+              <span className="hidden sm:inline">Imprimir Relatório</span>
             </button>
 
-            {/* Botão Salvar Principal */}
-            <button
-              onClick={handleSaveReport}
-              disabled={!canEdit || loading || saving}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                saveSuccess
-                  ? 'bg-emerald-500 text-white shadow-emerald-500/20'
-                  : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
-              }`}
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Salvando...</span>
-                </>
-              ) : saveSuccess ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Salvo!</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Salvar Relatório</span>
-                </>
-              )}
-            </button>
+            {/* Botão Salvar Principal (Visível no modo de edição) */}
+            {viewMode === 'EDIT' && (
+              <button
+                onClick={handleSaveReport}
+                disabled={!canEdit || loading || saving}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                  saveSuccess
+                    ? 'bg-emerald-500 text-white shadow-emerald-500/20'
+                    : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
+                }`}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Salvando...</span>
+                  </>
+                ) : saveSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Salvo!</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Salvar Relatório</span>
+                  </>
+                )}
+              </button>
+            )}
 
             {/* Usuário / Login */}
             {currentUser ? (
@@ -402,104 +437,134 @@ export default function App() {
             )}
           </div>
 
-          {/* Abas dos 3 Turnos */}
-          <div className="flex items-center gap-1.5 p-1 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto no-scrollbar">
-            {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
-              const cfg = SHIFTS_CONFIG[sk];
-              const isSelected = activeShift === sk;
-              const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
-              const isUnlocked = unlockedShifts[sk];
+          {/* Abas dos 3 Turnos (Apenas visível se estiver em modo de edição) */}
+          {viewMode === 'EDIT' ? (
+            <div className="flex items-center gap-1.5 p-1 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto no-scrollbar">
+              {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
+                const cfg = SHIFTS_CONFIG[sk];
+                const isSelected = activeShift === sk;
+                const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
+                const isUnlocked = unlockedShifts[sk];
 
-              return (
-                <button
-                  key={sk}
-                  onClick={() => setActiveShift(sk)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    isSelected
-                      ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                  }`}
-                >
-                  <span>{cfg.name}</span>
-                  <span className="text-[10px] font-normal text-slate-400 font-mono">
-                    ({cfg.startTime} - {cfg.endTime})
-                  </span>
+                return (
+                  <button
+                    key={sk}
+                    onClick={() => setActiveShift(sk)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      isSelected
+                        ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    }`}
+                  >
+                    <span>{cfg.name}</span>
+                    <span className="text-[10px] font-normal text-slate-400 font-mono">
+                      ({cfg.startTime} - {cfg.endTime})
+                    </span>
 
-                  {/* Indicador de Status do Turno */}
-                  {isNow ? (
-                    <span
-                      className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
-                      title="Turno em andamento no momento"
-                    />
-                  ) : isAdmin || isUnlocked ? (
-                    <span title="Edição liberada pelo administrador">
-                      <Unlock className="w-3 h-3 text-cyan-400" />
-                    </span>
-                  ) : (
-                    <span title="Fora do horário do turno (bloqueado para operadores)">
-                      <Lock className="w-3 h-3 text-slate-500" />
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                    {/* Indicador de Status do Turno */}
+                    {isNow ? (
+                      <span
+                        className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
+                        title="Turno em andamento no momento"
+                      />
+                    ) : isAdmin || isUnlocked ? (
+                      <span title="Edição liberada pelo administrador">
+                        <Unlock className="w-3 h-3 text-cyan-400" />
+                      </span>
+                    ) : (
+                      <span title="Fora do horário do turno (bloqueado para operadores)">
+                        <Lock className="w-3 h-3 text-slate-500" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-400 hidden sm:inline">
+                Matriz Consolidada de Células & Turnos
+              </span>
+              <button
+                onClick={() => setViewMode('EDIT')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
+              >
+                <PenLine className="w-3.5 h-3.5" />
+                <span>Preencher Turno</span>
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ── BANNER DE STATUS / BLOQUEIO DE HORÁRIO ── */}
-      <div className="no-print max-w-7xl mx-auto w-full px-4 pt-4">
-        {isAdmin ? (
-          <div className="flex items-center justify-between p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span>
-                <strong>Acesso Administrativo:</strong> Você possui liberação irrestrita para editar e auditar qualquer turno e data.
-              </span>
-            </div>
-          </div>
-        ) : isShiftUnlocked ? (
-          <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
-            <div className="flex items-center gap-2">
-              <Unlock className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>
-                <strong>Edição Desbloqueada por Senha:</strong> Este turno ({SHIFTS_CONFIG[activeShift].name}) está temporariamente liberado para edição.
-              </span>
-            </div>
-          </div>
-        ) : isTimeActive ? (
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs">
-            <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>
-              <strong>Turno Ativo:</strong> Horário permitido para preenchimento ({SHIFTS_CONFIG[activeShift].description}).
-            </span>
-          </div>
-        ) : (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs animate-fade-in">
-            <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-              <div>
-                <strong>Edição Bloqueada:</strong> Este turno está fora do horário permitido de preenchimento ({SHIFTS_CONFIG[activeShift].description}).
+      {/* ── BANNER DE STATUS / BLOQUEIO DE HORÁRIO (APENAS MODO PREENCHIMENTO) ── */}
+      {viewMode === 'EDIT' && (
+        <div className="no-print max-w-7xl mx-auto w-full px-4 pt-4">
+          {isAdmin ? (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>
+                  <strong>Acesso Administrativo:</strong> Você possui liberação irrestrita para editar e auditar qualquer turno e data.
+                </span>
               </div>
             </div>
-            <button
-              onClick={() => setIsPasswordModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-amber-400/20 shrink-0"
-            >
-              <KeyRound className="w-3.5 h-3.5" />
-              <span>Liberar com Senha</span>
-            </button>
-          </div>
-        )}
-      </div>
+          ) : isShiftUnlocked ? (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+              <div className="flex items-center gap-2">
+                <Unlock className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>
+                  <strong>Edição Desbloqueada por Senha:</strong> Este turno ({SHIFTS_CONFIG[activeShift].name}) está temporariamente liberado para edição.
+                </span>
+              </div>
+            </div>
+          ) : isTimeActive ? (
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs">
+              <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>
+                <strong>Turno Ativo:</strong> Horário permitido para preenchimento ({SHIFTS_CONFIG[activeShift].description}).
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs animate-fade-in">
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                <div>
+                  <strong>Edição Bloqueada:</strong> Este turno está fora do horário permitido de preenchimento ({SHIFTS_CONFIG[activeShift].description}).
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPasswordModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-amber-400/20 shrink-0"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Liberar com Senha</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* ── CONTEÚDO PRINCIPAL DO TURNO ── */}
+      {/* ── CONTEÚDO PRINCIPAL ── */}
       <main className="no-print flex-1 max-w-7xl mx-auto w-full px-4 py-4 space-y-4">
         {loading ? (
           <div className="h-64 flex flex-col items-center justify-center gap-3 text-slate-400">
             <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
             <span className="text-xs">Carregando diário de bordo do dia...</span>
           </div>
+        ) : !report ? (
+          <div className="p-8 text-center text-slate-500 text-xs">
+            Nenhum dado encontrado para esta data.
+          </div>
+        ) : viewMode === 'READ' ? (
+          <MachineMatrixView
+            report={report}
+            machinesList={allMachines}
+            onOpenEditShift={(sk) => {
+              setActiveShift(sk);
+              setViewMode('EDIT');
+            }}
+          />
         ) : (
           <>
             {/* Responsável e Ocorrências Gerais */}
@@ -745,12 +810,14 @@ export default function App() {
         onClose={() => setIsLoginModalOpen(false)}
       />
 
-      {/* ── VISUALIZAÇÃO DE IMPRESSÃO ── */}
-      {report && (
-        <PrintReportView
-          report={report}
-          machinesList={allMachines}
-        />
+      {/* ── VISUALIZAÇÃO DE IMPRESSÃO (Matriz Completa A4 Paisagem quando em modo de Edição) ── */}
+      {report && viewMode === 'EDIT' && (
+        <div className="hidden print:block">
+          <MachineMatrixView
+            report={report}
+            machinesList={allMachines}
+          />
+        </div>
       )}
     </div>
   );
