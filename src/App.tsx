@@ -6,7 +6,6 @@ import {
   Lock, 
   Unlock, 
   KeyRound, 
-  User as UserIcon, 
   LogIn, 
   LogOut, 
   CheckCircle2, 
@@ -212,38 +211,6 @@ export default function App() {
     });
   };
 
-  // Modificação das ocorrências gerais
-  const handleGeneralDescChange = (val: string) => {
-    if (!canEdit || !report) return;
-    const currentShift = report.shifts?.[activeShift] || getEmptyShift();
-    setReport({
-      ...report,
-      shifts: {
-        ...report.shifts,
-        [activeShift]: {
-          ...currentShift,
-          generalDescription: val
-        }
-      }
-    });
-  };
-
-  // Modificação do operador responsável
-  const handleOperatorNameChange = (val: string) => {
-    if (!canEdit || !report) return;
-    const currentShift = report.shifts?.[activeShift] || getEmptyShift();
-    setReport({
-      ...report,
-      shifts: {
-        ...report.shifts,
-        [activeShift]: {
-          ...currentShift,
-          operatorName: val
-        }
-      }
-    });
-  };
-
   // Navegação de dias
   const handleShiftDate = (daysDelta: number) => {
     const [y, m, d] = selectedDate.split('-').map(Number);
@@ -273,22 +240,19 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           {/* Logo & Título */}
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-tr from-cyan-600 to-blue-500 rounded-xl shadow-lg shadow-cyan-500/20 text-white font-black text-sm tracking-widest">
-              ATMS
+            <div className="p-2 bg-gradient-to-tr from-cyan-600 to-blue-500 rounded-xl shadow-lg shadow-cyan-500/20 text-white">
+              <FileText className="w-5 h-5" />
             </div>
             <div>
               <h1 className="text-sm font-bold text-white flex items-center gap-2">
                 Diário de Processo & Turnos
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                  Dedicado
-                </span>
               </h1>
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <Clock className="w-3.5 h-3.5 text-slate-500" />
                 <span>{currentTime.toLocaleTimeString()}</span>
                 <span>•</span>
                 <span className="font-semibold text-slate-300">
-                  {SHIFTS_CONFIG[getCurrentActiveShift(currentTime)].name} em andamento
+                  {SHIFTS_CONFIG[getCurrentActiveShift(currentTime)].name}
                 </span>
               </div>
             </div>
@@ -315,7 +279,7 @@ export default function App() {
                   ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
-              title="Preencher apontamentos e ocorrências do turno"
+              title="Preencher apontamentos do turno"
             >
               <PenLine className="w-3.5 h-3.5" />
               <span>Preencher Turno</span>
@@ -324,15 +288,50 @@ export default function App() {
 
           {/* Ações do Topo */}
           <div className="flex items-center gap-2">
-            {/* Botão de Impressão */}
+            {/* Navegação de Data (ao lado da impressora) */}
+            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button
+                onClick={() => handleShiftDate(-1)}
+                className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+                title="Dia anterior"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="px-2 py-0.5 rounded-lg bg-transparent text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
+              />
+
+              <button
+                onClick={() => handleShiftDate(1)}
+                className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+                title="Próximo dia"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              {selectedDate !== getLocalDateString() && (
+                <button
+                  onClick={() => setSelectedDate(getLocalDateString())}
+                  className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer ml-0.5"
+                  title="Voltar para a data de hoje"
+                >
+                  Hoje
+                </button>
+              )}
+            </div>
+
+            {/* Botão de Impressão (apenas ícone) */}
             <button
               onClick={() => window.print()}
               disabled={!report || loading}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
               title="Imprimir relatório diário completo em A4 Paisagem"
             >
-              <Printer className="w-4 h-4 text-cyan-400" />
-              <span className="hidden sm:inline">Imprimir Relatório</span>
+              <Printer className="w-4 h-4" />
             </button>
 
             {/* Botão Salvar Principal (Visível no modo de edição) */}
@@ -340,45 +339,43 @@ export default function App() {
               <button
                 onClick={handleSaveReport}
                 disabled={!canEdit || loading || saving}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                   saveSuccess
                     ? 'bg-emerald-500 text-white shadow-emerald-500/20'
                     : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
                 }`}
+                title="Salvar alterações do relatório"
               >
                 {saving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Salvando...</span>
-                  </>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : saveSuccess ? (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Salvo!</span>
+                    <span className="hidden sm:inline">Salvo!</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>Salvar Relatório</span>
+                    <span className="hidden sm:inline">Salvar</span>
                   </>
                 )}
               </button>
             )}
 
-            {/* Usuário / Login */}
+            {/* Usuário / Login (apenas ícone se não logado) */}
             {currentUser ? (
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-                <div className="text-right hidden md:block">
-                  <div className="text-xs font-semibold text-white truncate max-w-[150px]">
+              <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-800">
+                <div className="text-right hidden lg:block">
+                  <div className="text-xs font-semibold text-white truncate max-w-[120px]">
                     {currentUser.email?.split('@')[0]}
                   </div>
-                  <div className="text-[10px] text-cyan-400 font-mono">
-                    {isAdmin ? 'ADMINISTRADOR' : 'OPERADOR'}
+                  <div className="text-[9px] text-cyan-400 font-mono">
+                    {isAdmin ? 'ADMIN' : 'OPERADOR'}
                   </div>
                 </div>
                 <button
                   onClick={() => signOut(auth)}
-                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-400 border border-slate-700 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-400 border border-slate-700 transition-colors cursor-pointer"
                   title="Sair da conta"
                 >
                   <LogOut className="w-4 h-4" />
@@ -387,58 +384,20 @@ export default function App() {
             ) : (
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition-colors cursor-pointer"
+                title="Entrar"
               >
-                <LogIn className="w-4 h-4 text-cyan-400" />
-                <span>Entrar</span>
+                <LogIn className="w-4 h-4" />
               </button>
             )}
           </div>
         </div>
       </header>
 
-      {/* ── BARRA DE SELEÇÃO DE DATA & TURNOS ── */}
-      <section className="no-print bg-slate-900/60 border-b border-slate-800/80 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-          {/* Navegação de Data */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleShiftDate(-1)}
-              className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
-              title="Dia anterior"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            <div className="relative flex items-center">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold font-mono text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
-              />
-            </div>
-
-            <button
-              onClick={() => handleShiftDate(1)}
-              className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
-              title="Próximo dia"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-
-            {selectedDate !== getLocalDateString() && (
-              <button
-                onClick={() => setSelectedDate(getLocalDateString())}
-                className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer"
-              >
-                Voltar para Hoje
-              </button>
-            )}
-          </div>
-
-          {/* Abas dos 3 Turnos (Apenas visível se estiver em modo de edição) */}
-          {viewMode === 'EDIT' ? (
+      {/* ── BARRA DE SELEÇÃO DOS TURNOS (APENAS EM MODO DE EDIÇÃO) ── */}
+      {viewMode === 'EDIT' && (
+        <section className="no-print bg-slate-900/60 border-b border-slate-800/80 px-4 py-2.5">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-1.5 p-1 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto no-scrollbar">
               {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
                 const cfg = SHIFTS_CONFIG[sk];
@@ -480,22 +439,9 @@ export default function App() {
                 );
               })}
             </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-slate-400 hidden sm:inline">
-                Matriz Consolidada de Células & Turnos
-              </span>
-              <button
-                onClick={() => setViewMode('EDIT')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
-              >
-                <PenLine className="w-3.5 h-3.5" />
-                <span>Preencher Turno</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* ── BANNER DE STATUS / BLOQUEIO DE HORÁRIO (APENAS MODO PREENCHIMENTO) ── */}
       {viewMode === 'EDIT' && (
@@ -567,50 +513,6 @@ export default function App() {
           />
         ) : (
           <>
-            {/* Responsável e Ocorrências Gerais */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Responsável */}
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                  Responsável / Operador ({SHIFTS_CONFIG[activeShift].name}):
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    disabled={!canEdit}
-                    value={currentShiftData.operatorName || ''}
-                    onChange={(e) => handleOperatorNameChange(e.target.value)}
-                    placeholder={canEdit ? 'Nome do responsável pelo turno...' : 'Não informado'}
-                    className={`w-full px-3 py-2 pl-9 rounded-xl border text-xs text-white placeholder-slate-500 focus:outline-none ${
-                      canEdit
-                        ? 'bg-slate-950 border-slate-700 focus:border-cyan-500'
-                        : 'bg-slate-950/50 border-slate-800 text-slate-400 cursor-not-allowed'
-                    }`}
-                  />
-                  <UserIcon className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-                </div>
-              </div>
-
-              {/* Ocorrências Gerais */}
-              <div className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                  Ocorrências Gerais do Turno:
-                </label>
-                <textarea
-                  rows={2}
-                  disabled={!canEdit}
-                  value={currentShiftData.generalDescription || ''}
-                  onChange={(e) => handleGeneralDescChange(e.target.value)}
-                  placeholder={canEdit ? 'Anote ocorrências gerais de produção, qualidade, reuniões ou avisos...' : 'Sem anotações gerais.'}
-                  className={`w-full p-2.5 rounded-xl border text-xs text-white placeholder-slate-500 focus:outline-none resize-none ${
-                    canEdit
-                      ? 'bg-slate-950 border-slate-700 focus:border-cyan-500'
-                      : 'bg-slate-950/50 border-slate-800 text-slate-400 cursor-not-allowed'
-                  }`}
-                />
-              </div>
-            </div>
-
             {/* ── APONTAMENTOS DAS MÁQUINAS / CÉLULAS ── */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
               {/* Barra de Filtro e Busca de Máquinas */}

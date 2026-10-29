@@ -281,51 +281,6 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         </div>
       </div>
 
-      {/* ── QUADRO DE RESUMO DOS TURNOS (RESPONSÁVEIS E GERAIS) ── */}
-      <div className="no-print grid grid-cols-1 md:grid-cols-3 gap-3">
-        {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
-          const cfg = SHIFTS_CONFIG[sk];
-          const shiftData = report.shifts?.[sk];
-          const hasDesc = Boolean(shiftData?.generalDescription?.trim());
-
-          return (
-            <div
-              key={sk}
-              className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2 shadow-sm"
-            >
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <span className="font-bold text-xs text-white uppercase tracking-wider">
-                  {cfg.name}
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono">
-                  {cfg.startTime} - {cfg.endTime}
-                </span>
-              </div>
-
-              <div className="text-xs">
-                <span className="text-slate-400 font-medium">Responsável: </span>
-                <span className="font-bold text-cyan-400">
-                  {shiftData?.operatorName || 'Não informado'}
-                </span>
-              </div>
-
-              <div>
-                <span className="text-slate-400 text-[11px] font-medium block mb-1">
-                  Ocorrências Gerais:
-                </span>
-                <div className={`p-2 rounded-xl text-xs whitespace-pre-wrap leading-relaxed max-h-24 overflow-y-auto custom-scrollbar ${
-                  hasDesc 
-                    ? 'bg-slate-950 border border-slate-800 text-slate-200'
-                    : 'text-slate-500 italic'
-                }`}>
-                  {shiftData?.generalDescription || 'Nenhuma ocorrência geral anotada.'}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       {/* ── TABELA MATRIZ DIÁRIA DE CÉLULAS X TURNOS (TELA + IMPRESSÃO) ── */}
       <div id="printable-matrix-report" className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         {/* Cabeçalho exclusivo para a impressão A4 */}
@@ -333,7 +288,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-base font-black uppercase tracking-wider text-black">
-                ATMS • Relatório Diário de Processo & Células
+                Relatório Diário de Processo & Células
               </h1>
               <p className="text-[9pt] font-bold text-black mt-0.5">
                 Data: {formattedDate} ({weekdayName})
@@ -343,19 +298,6 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
             </div>
             <div className="text-right text-[8pt] text-gray-700">
               Emitido em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}
-            </div>
-          </div>
-
-          {/* Responsáveis na impressão */}
-          <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-gray-400 text-[8pt]">
-            <div>
-              <strong>1º Turno:</strong> {report.shifts?.shift1?.operatorName || '—'}
-            </div>
-            <div>
-              <strong>2º Turno:</strong> {report.shifts?.shift2?.operatorName || '—'}
-            </div>
-            <div>
-              <strong>3º Turno:</strong> {report.shifts?.shift3?.operatorName || '—'}
             </div>
           </div>
         </div>
