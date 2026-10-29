@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Clock, 
   Save, 
@@ -6,22 +6,30 @@ import {
   Unlock, 
   KeyRound, 
   CheckCircle2, 
-  Plus, 
   Trash2, 
   Search, 
   ChevronLeft, 
   ChevronRight, 
-  ShieldCheck,
-  Loader2,
-  FileText,
-  Eye,
-  PenLine,
-  Menu,
-  Calendar,
-  Filter
+  ShieldCheck, 
+  Loader2, 
+  FileText, 
+  Eye, 
+  PenLine, 
+  Menu, 
+  Calendar, 
+  Filter,
+  History,
+  ArrowRight
 } from 'lucide-react';
 import logo1Img from './assets/logo1.png';
-import { auth, getDailyReportFirebase, saveDailyReportFirebase, getUserProfileFirebase } from './firebase';
+import { 
+  auth, 
+  getDailyReportFirebase, 
+  saveDailyReportFirebase, 
+  getUserProfileFirebase,
+  searchAllDailyReportsFirebase
+} from './firebase';
+import type { GlobalSearchResult } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import type { DailyProcessReport, ShiftReport, UserProfile } from './types';
@@ -96,16 +104,46 @@ export default function App() {
 
   // Filtros de interface
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedMachineFilter, setSelectedMachineFilter] = useState<string>('ALL');
   const [filterOnlyWithNotes, setFilterOnlyWithNotes] = useState(false);
   const [selectedShiftFilter, setSelectedShiftFilter] = useState<'ALL' | 'shift1' | 'shift2' | 'shift3'>('ALL');
-  const [customMachines, setCustomMachines] = useState<string[]>([]);
-  const [newMachineInput, setNewMachineInput] = useState('');
-  const [isAddingMachine, setIsAddingMachine] = useState(false);
+
+  // Busca Global em Todos os Relatórios e Datas
+  const [globalSearchResults, setGlobalSearchResults] = useState<GlobalSearchResult[]>([]);
+  const [isSearchingGlobal, setIsSearchingGlobal] = useState<boolean>(false);
+  const [hasSearchedGlobal, setHasSearchedGlobal] = useState<boolean>(false);
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setGlobalSearchResults([]);
+      setHasSearchedGlobal(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingGlobal(true);
+      setHasSearchedGlobal(true);
+      try {
+        const results = await searchAllDailyReportsFirebase(q);
+        setGlobalSearchResults(results);
+      } catch (err) {
+        console.error('Erro na pesquisa global:', err);
+      } finally {
+        setIsSearchingGlobal(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleClearFilters = () => {
     setSearchQuery('');
+    setSelectedMachineFilter('ALL');
     setFilterOnlyWithNotes(false);
     setSelectedShiftFilter('ALL');
+    setGlobalSearchResults([]);
+    setHasSearchedGlobal(false);
   };
 
   // Relógio em tempo real
@@ -192,9 +230,9 @@ export default function App() {
     };
   }, [selectedDate]);
 
-  // Lista consolidada de máquinas (padrão + personalizadas + registradas no relatório)
+  // Lista consolidada de máquinas (padrão + registradas no relatório)
   const allMachines = useMemo(() => {
-    const set = new Set([...DEFAULT_MACHINES, ...customMachines]);
+    const set = new Set([...DEFAULT_MACHINES]);
     if (report) {
       for (const sk of ['shift1', 'shift2', 'shift3'] as const) {
         const shiftObj = report.shifts?.[sk];
@@ -211,11 +249,12 @@ export default function App() {
       if (numA !== numB) return numA - numB;
       return a.localeCompare(b);
     });
-  }, [customMachines, report]);
+  }, [report]);
 
   // Filtro de máquinas na tela
   const filteredMachines = useMemo(() => {
     return allMachines.filter((m) => {
+      if (selectedMachineFilter !== 'ALL' && m !== selectedMachineFilter) return false;
       const matchSearch = m.toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchSearch) return false;
       if (filterOnlyWithNotes) {
@@ -224,7 +263,7 @@ export default function App() {
       }
       return true;
     });
-  }, [allMachines, searchQuery, filterOnlyWithNotes, report, activeShift]);
+  }, [allMachines, selectedMachineFilter, searchQuery, filterOnlyWithNotes, report, activeShift]);
 
   // Regra de Permissão de Edição
   const isAdmin = userProfile?.role === 'ADMIN';
@@ -276,18 +315,6 @@ export default function App() {
     const dateObj = new Date(y, m - 1, d);
     dateObj.setDate(dateObj.getDate() + daysDelta);
     setSelectedDate(getLocalDateString(dateObj));
-  };
-
-  // Adicionar máquina manual
-  const handleAddCustomMachine = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMachineInput.trim()) return;
-    const formatted = newMachineInput.trim().toUpperCase();
-    if (!customMachines.includes(formatted)) {
-      setCustomMachines([...customMachines, formatted]);
-    }
-    setNewMachineInput('');
-    setIsAddingMachine(false);
   };
 
   const currentShiftData = report?.shifts?.[activeShift] || getEmptyShift();
@@ -535,7 +562,102 @@ export default function App() {
       )}
 
       {/* ── CONTEÚDO PRINCIPAL ── */}
-      <main className="no-print flex-1 max-w-7xl mx-auto w-full px-4 py-4 space-y-4">
+      <main className="no-print flex-1 max-w-7xl mx-auto w-full px-3 sm:px-4 py-3 space-y-3">
+        {/* ── PAINEL DE RESULTADOS DA BUSCA GLOBAL (TODOS OS RELATÓRIOS E DATAS) ── */}
+        {hasSearchedGlobal && (
+          <div className="bg-slate-900 border border-cyan-500/40 rounded-2xl p-3.5 space-y-3 shadow-xl animate-fade-in">
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-cyan-400 shrink-0" />
+                <h3 className="text-xs sm:text-sm font-bold text-white">
+                  Busca em Todos os Relatórios e Datas:
+                  <span className="text-cyan-300 ml-1.5 font-normal">"{searchQuery}"</span>
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                {isSearchingGlobal ? (
+                  <div className="flex items-center gap-1.5 text-xs text-cyan-400">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span className="text-[11px]">Consultando...</span>
+                  </div>
+                ) : (
+                  <span className="text-[11px] font-mono text-slate-400">
+                    {globalSearchResults.length} encontrada{globalSearchResults.length === 1 ? '' : 's'}
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    setHasSearchedGlobal(false);
+                    setGlobalSearchResults([]);
+                    setSearchQuery('');
+                  }}
+                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  ✕ Fechar
+                </button>
+              </div>
+            </div>
+
+            {isSearchingGlobal ? (
+              <div className="py-6 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
+                <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                <span>Buscando informações em todo o histórico de relatórios...</span>
+              </div>
+            ) : globalSearchResults.length === 0 ? (
+              <div className="py-5 text-center text-slate-400 text-xs italic">
+                Nenhum apontamento encontrado em nenhum relatório anterior para "{searchQuery}".
+              </div>
+            ) : (
+              <div className="max-h-72 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                {globalSearchResults.map((item, idx) => {
+                  const [y, m, d] = item.date.split('-');
+                  const dateBr = `${d}/${m}/${y}`;
+
+                  return (
+                    <div
+                      key={`${item.date}-${item.shiftKey}-${item.machine}-${idx}`}
+                      onClick={() => {
+                        setSelectedDate(item.date);
+                        setActiveShift(item.shiftKey);
+                        setSelectedMachineFilter(item.machine);
+                        setHasSearchedGlobal(false);
+                      }}
+                      className="p-2.5 sm:p-3 rounded-xl bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 transition-all cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm"
+                      title="Clique para abrir este relatório e turno"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className="text-xs font-mono font-bold text-cyan-400">
+                            {dateBr}
+                          </span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+                            {item.shiftName}
+                          </span>
+                          <span className="text-xs font-bold text-white font-mono">
+                            {item.machine}
+                          </span>
+                          {item.operatorName && (
+                            <span className="text-[10px] text-slate-400">
+                              • {item.operatorName}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-200 line-clamp-2 leading-relaxed">
+                          {item.text}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-cyan-400 group-hover:text-cyan-300 shrink-0 sm:self-center">
+                        <span>Ver data</span>
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {loading ? (
           <div className="h-64 flex flex-col items-center justify-center gap-3 text-slate-400">
             <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
@@ -548,12 +670,12 @@ export default function App() {
         ) : viewMode === 'READ' ? (
           <>
             {/* Aviso ultra compacto de filtros ativos */}
-            {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL') && (
+            {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL' || selectedMachineFilter !== 'ALL') && (
               <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs animate-fade-in">
                 <div className="flex items-center gap-2 truncate">
                   <Filter className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
                   <span className="truncate">
-                    Filtro ativo: {searchQuery && `"${searchQuery}"`} {filterOnlyWithNotes && '• Com apontamento'} {selectedShiftFilter !== 'ALL' && `• ${selectedShiftFilter === 'shift1' ? '1º T' : selectedShiftFilter === 'shift2' ? '2º T' : '3º T'}`}
+                    Filtro: {selectedMachineFilter !== 'ALL' && `[${selectedMachineFilter}]`} {searchQuery && `"${searchQuery}"`} {filterOnlyWithNotes && '• Com apontamento'} {selectedShiftFilter !== 'ALL' && `• ${selectedShiftFilter === 'shift1' ? '1º T' : selectedShiftFilter === 'shift2' ? '2º T' : '3º T'}`}
                   </span>
                 </div>
                 <button
@@ -574,6 +696,8 @@ export default function App() {
               onToggleOnlyWithNotes={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
               selectedShiftFilter={selectedShiftFilter}
               onShiftFilterChange={setSelectedShiftFilter}
+              selectedMachineFilter={selectedMachineFilter}
+              onMachineFilterChange={setSelectedMachineFilter}
               onOpenMenu={() => setIsMenuOpen(true)}
               onOpenEditShift={(sk) => {
                 setActiveShift(sk);
@@ -584,81 +708,63 @@ export default function App() {
         ) : (
           <>
             {/* ── APONTAMENTOS DAS MÁQUINAS / CÉLULAS ── */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
-              {/* Barra de Filtro e Busca de Máquinas */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-white">
-                    Células e Máquinas ({filteredMachines.length})
-                  </h2>
-                  <span className="text-[11px] text-slate-400">
-                    {SHIFTS_CONFIG[activeShift].name}
-                  </span>
-                </div>
-
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+              {/* Barra de Filtro das Máquinas e Busca Global em Todos os Relatórios */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-800">
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* Busca */}
+                  {/* Filtro das Máquinas */}
+                  <select
+                    value={selectedMachineFilter}
+                    onChange={(e) => setSelectedMachineFilter(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                    title="Filtrar máquina específica"
+                  >
+                    <option value="ALL">Todas as Máquinas ({allMachines.length})</option>
+                    {allMachines.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+
+                  {/* Barra de Pesquisa Global em Todos os Relatórios e Datas */}
                   <div className="relative">
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Filtrar célula..."
-                      className="px-2.5 py-1 pl-8 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-36 sm:w-44"
+                      placeholder="Buscar em todos os relatórios e datas..."
+                      className="px-2.5 py-1.5 pl-8 pr-7 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-48 sm:w-72"
                     />
-                    <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2" />
+                    <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+                    {searchQuery && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery('');
+                          setHasSearchedGlobal(false);
+                          setGlobalSearchResults([]);
+                        }}
+                        className="absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
 
-                  {/* Ver apenas com notas */}
+                  {/* Ver apenas com apontamento */}
                   <button
                     onClick={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
                       filterOnlyWithNotes
                         ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
                         : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    <span>Com Anotação</span>
+                    <span>Apenas com Apontamento</span>
                   </button>
+                </div>
 
-                  {/* Adicionar Máquina personalizada */}
-                  {canEdit && (
-                    isAddingMachine ? (
-                      <form onSubmit={handleAddCustomMachine} className="flex items-center gap-1">
-                        <input
-                          type="text"
-                          autoFocus
-                          value={newMachineInput}
-                          onChange={(e) => setNewMachineInput(e.target.value)}
-                          placeholder="Ex: CÉLULA 99"
-                          className="px-2 py-1 rounded-lg bg-slate-950 border border-cyan-500 text-xs text-white w-28 focus:outline-none font-bold uppercase"
-                        />
-                        <button
-                          type="submit"
-                          className="p-1 rounded-lg bg-cyan-500 text-slate-950 hover:bg-cyan-400 text-xs font-bold cursor-pointer"
-                        >
-                          OK
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsAddingMachine(false)}
-                          className="p-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white text-xs cursor-pointer"
-                        >
-                          ✕
-                        </button>
-                      </form>
-                    ) : (
-                      <button
-                        onClick={() => setIsAddingMachine(true)}
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
-                        title="Adicionar outra máquina ou célula"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Adicionar Máquina</span>
-                      </button>
-                    )
-                  )}
+                <div className="text-xs text-slate-400 font-mono">
+                  Exibindo: <strong className="text-cyan-400">{filteredMachines.length}</strong> máquinas
                 </div>
               </div>
 
@@ -793,6 +899,9 @@ export default function App() {
         onToggleTheme={toggleTheme}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        selectedMachineFilter={selectedMachineFilter}
+        onMachineFilterChange={setSelectedMachineFilter}
+        allMachinesList={allMachines}
         onlyWithNotes={filterOnlyWithNotes}
         onToggleOnlyWithNotes={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
         selectedShiftFilter={selectedShiftFilter}

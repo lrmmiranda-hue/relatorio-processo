@@ -75,3 +75,74 @@ export async function getAllUserProfilesFirebase(): Promise<UserProfile[]> {
     return [];
   }
 }
+
+export interface GlobalSearchResult {
+  date: string;
+  shiftKey: 'shift1' | 'shift2' | 'shift3';
+  shiftName: string;
+  machine: string;
+  text: string;
+  operatorName?: string;
+}
+
+// Busca em TODAS as datas e TODOS os relatórios salvos no sistema
+export async function searchAllDailyReportsFirebase(query: string): Promise<GlobalSearchResult[]> {
+  const cleanQuery = query.trim().toLowerCase();
+  if (!cleanQuery) return [];
+
+  try {
+    const snap = await getDocs(collection(db, 'daily_reports'));
+    const results: GlobalSearchResult[] = [];
+
+    const shiftNames: Record<string, string> = {
+      shift1: '1º Turno',
+      shift2: '2º Turno',
+      shift3: '3º Turno'
+    };
+
+    snap.docs.forEach((docSnap) => {
+      const data = docSnap.data() as DailyProcessReport;
+      const date = data.date || docSnap.id;
+
+      if (!data.shifts) return;
+
+      (['shift1', 'shift2', 'shift3'] as const).forEach((sk) => {
+        const shiftObj = data.shifts?.[sk];
+        if (!shiftObj) return;
+
+        // Procura nas máquinas do turno
+        if (shiftObj.machines) {
+          Object.entries(shiftObj.machines).forEach(([mName, note]) => {
+            if (!note) return;
+            const noteStr = String(note).trim();
+            if (!noteStr) return;
+
+            // Bate com nome da máquina, texto da anotação, data ou operador
+            if (
+              mName.toLowerCase().includes(cleanQuery) ||
+              noteStr.toLowerCase().includes(cleanQuery) ||
+              date.includes(cleanQuery) ||
+              (shiftObj.operatorName && shiftObj.operatorName.toLowerCase().includes(cleanQuery))
+            ) {
+              results.push({
+                date,
+                shiftKey: sk,
+                shiftName: shiftNames[sk] || sk,
+                machine: mName,
+                text: noteStr,
+                operatorName: shiftObj.operatorName
+              });
+            }
+          });
+        }
+      });
+    });
+
+    // Ordenar pelas datas mais recentes primeiro
+    results.sort((a, b) => b.date.localeCompare(a.date));
+    return results;
+  } catch (err) {
+    console.error('Erro ao pesquisar relatórios globais:', err);
+    return [];
+  }
+}

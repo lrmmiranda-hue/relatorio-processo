@@ -28,6 +28,9 @@ interface MenuDrawerProps {
   // Filtros de Máquinas
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  selectedMachineFilter: string;
+  onMachineFilterChange: (machine: string) => void;
+  allMachinesList: string[];
   onlyWithNotes: boolean;
   onToggleOnlyWithNotes: () => void;
   selectedShiftFilter: 'ALL' | 'shift1' | 'shift2' | 'shift3';
@@ -47,6 +50,9 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
   onToggleTheme,
   searchQuery,
   onSearchChange,
+  selectedMachineFilter,
+  onMachineFilterChange,
+  allMachinesList,
   onlyWithNotes,
   onToggleOnlyWithNotes,
   selectedShiftFilter,
@@ -57,7 +63,12 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const hasActiveFilters = Boolean(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL');
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() || 
+    onlyWithNotes || 
+    selectedShiftFilter !== 'ALL' || 
+    selectedMachineFilter !== 'ALL'
+  );
   const isAdmin = userProfile?.role === 'ADMIN';
 
   return (
@@ -206,17 +217,17 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
               )}
             </div>
 
-            {/* Campo de Busca */}
+            {/* Campo de Busca Histórica / Global */}
             <div>
               <label className="block text-[11px] text-slate-400 mb-1">
-                Nome ou número da célula:
+                Buscar em todos os relatórios e datas:
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder="Ex: 504, 301, T5..."
+                  placeholder="Ex: 504, inserto, manutenção..."
                   className="w-full px-3 py-2 pl-9 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                 />
                 <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
@@ -229,6 +240,23 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Filtro das Máquinas */}
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">
+                Filtrar máquina específica:
+              </label>
+              <select
+                value={selectedMachineFilter}
+                onChange={(e) => onMachineFilterChange(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+              >
+                <option value="ALL">Todas as Máquinas ({allMachinesList.length})</option>
+                {allMachinesList.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
             </div>
 
             {/* Filtro por Turno */}

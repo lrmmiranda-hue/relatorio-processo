@@ -12,6 +12,8 @@ interface MachineMatrixViewProps {
   onToggleOnlyWithNotes?: () => void;
   selectedShiftFilter?: 'ALL' | 'shift1' | 'shift2' | 'shift3';
   onShiftFilterChange?: (shift: 'ALL' | 'shift1' | 'shift2' | 'shift3') => void;
+  selectedMachineFilter?: string;
+  onMachineFilterChange?: (machine: string) => void;
   onOpenMenu?: () => void;
 }
 
@@ -25,6 +27,8 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
   onToggleOnlyWithNotes: toggleExternalOnlyNotes,
   selectedShiftFilter: externalShiftFilter,
   onShiftFilterChange: setExternalShiftFilter,
+  selectedMachineFilter,
+  onMachineFilterChange,
   onOpenMenu
 }) => {
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
@@ -50,6 +54,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
   // Filtra as máquinas a serem exibidas
   const displayedMachines = useMemo(() => {
     return machinesList.filter((m) => {
+      if (selectedMachineFilter && selectedMachineFilter !== 'ALL' && m !== selectedMachineFilter) return false;
       const matchSearch = m.toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchSearch) return false;
 
@@ -66,7 +71,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
 
       return true;
     });
-  }, [machinesList, searchQuery, onlyWithNotes, selectedShiftFilter, report]);
+  }, [machinesList, searchQuery, onlyWithNotes, selectedShiftFilter, selectedMachineFilter, report]);
 
   const renderCellContent = (val: string, shiftKey: 'shift1' | 'shift2' | 'shift3') => {
     const trimmed = (val || '').trim();
@@ -238,6 +243,21 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
               />
               <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
             </div>
+
+            {/* Filtro das Máquinas */}
+            {onMachineFilterChange && (
+              <select
+                value={selectedMachineFilter || 'ALL'}
+                onChange={(e) => onMachineFilterChange(e.target.value)}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                title="Filtrar máquina específica"
+              >
+                <option value="ALL">Todas as Máquinas</option>
+                {machinesList.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            )}
 
             {/* Filtro por Turno */}
             <select
