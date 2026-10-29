@@ -6,16 +6,39 @@ interface MachineMatrixViewProps {
   report: DailyProcessReport;
   machinesList: string[];
   onOpenEditShift?: (shiftKey: 'shift1' | 'shift2' | 'shift3') => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  onlyWithNotes?: boolean;
+  onToggleOnlyWithNotes?: () => void;
+  selectedShiftFilter?: 'ALL' | 'shift1' | 'shift2' | 'shift3';
+  onShiftFilterChange?: (shift: 'ALL' | 'shift1' | 'shift2' | 'shift3') => void;
+  onOpenMenu?: () => void;
 }
 
 export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
   report,
   machinesList,
-  onOpenEditShift
+  onOpenEditShift,
+  searchQuery: externalSearch,
+  onSearchChange: setExternalSearch,
+  onlyWithNotes: externalOnlyNotes,
+  onToggleOnlyWithNotes: toggleExternalOnlyNotes,
+  selectedShiftFilter: externalShiftFilter,
+  onShiftFilterChange: setExternalShiftFilter,
+  onOpenMenu
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [onlyWithNotes, setOnlyWithNotes] = useState(false);
-  const [selectedShiftFilter, setSelectedShiftFilter] = useState<'ALL' | 'shift1' | 'shift2' | 'shift3'>('ALL');
+  const [internalSearchQuery, setInternalSearchQuery] = useState('');
+  const [internalOnlyWithNotes, setInternalOnlyWithNotes] = useState(false);
+  const [internalSelectedShiftFilter, setInternalSelectedShiftFilter] = useState<'ALL' | 'shift1' | 'shift2' | 'shift3'>('ALL');
+
+  const searchQuery = externalSearch !== undefined ? externalSearch : internalSearchQuery;
+  const setSearchQuery = setExternalSearch || setInternalSearchQuery;
+
+  const onlyWithNotes = externalOnlyNotes !== undefined ? externalOnlyNotes : internalOnlyWithNotes;
+  const setOnlyWithNotes = toggleExternalOnlyNotes || (() => setInternalOnlyWithNotes(!internalOnlyWithNotes));
+
+  const selectedShiftFilter = externalShiftFilter !== undefined ? externalShiftFilter : internalSelectedShiftFilter;
+  const setSelectedShiftFilter = setExternalShiftFilter || setInternalSelectedShiftFilter;
 
   const [year, month, day] = report.date.split('-');
   const formattedDate = `${day}/${month}/${year}`;
@@ -164,49 +187,87 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         }
       `}</style>
 
-      {/* ── BARRA DE FILTROS DA MATRIZ ── */}
-      <div className="no-print bg-slate-900 border border-slate-800 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Busca */}
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar célula..."
-              className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-40 sm:w-48"
-            />
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+      {/* ── BARRA DE FILTROS DA MATRIZ (COMPACTA NO CELULAR E COMPLETA NO DESKTOP) ── */}
+      <div className="no-print">
+        {/* Versão Celular: Barra Ultra Compacta de 1 linha */}
+        <div className="sm:hidden flex items-center justify-between px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px]">
+          <div className="flex items-center gap-1.5 truncate text-slate-300">
+            <span className="font-mono text-cyan-400 font-bold">{displayedMachines.length}</span>
+            <span className="text-slate-400">células</span>
+            {(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL') && (
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-semibold truncate">
+                Filtrado
+              </span>
+            )}
           </div>
-
-          {/* Filtro por Turno */}
-          <select
-            value={selectedShiftFilter}
-            onChange={(e) => setSelectedShiftFilter(e.target.value as any)}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
-          >
-            <option value="ALL">Todos os Turnos</option>
-            <option value="shift1">1º T</option>
-            <option value="shift2">2º T</option>
-            <option value="shift3">3º T</option>
-          </select>
-
-          {/* Toggle Apenas com Apontamento */}
-          <button
-            onClick={() => setOnlyWithNotes(!onlyWithNotes)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
-              onlyWithNotes
-                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
-                : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Apenas com Apontamento</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL') ? (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  if (onlyWithNotes && toggleExternalOnlyNotes) toggleExternalOnlyNotes();
+                  if (setExternalShiftFilter) setExternalShiftFilter('ALL');
+                }}
+                className="text-[10px] text-cyan-400 hover:text-white font-bold cursor-pointer"
+              >
+                ✕ Limpar
+              </button>
+            ) : null}
+            {onOpenMenu && (
+              <button
+                onClick={onOpenMenu}
+                className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold border border-slate-700 cursor-pointer"
+              >
+                Filtros no Menu
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="text-xs text-slate-400 font-mono">
-          Exibindo: <strong className="text-cyan-400">{displayedMachines.length}</strong> células
+        {/* Versão Desktop: Barra Completa */}
+        <div className="hidden sm:flex bg-slate-900 border border-slate-800 rounded-2xl p-2.5 items-center justify-between gap-3 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Busca */}
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar célula..."
+                className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-44"
+              />
+              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+            </div>
+
+            {/* Filtro por Turno */}
+            <select
+              value={selectedShiftFilter}
+              onChange={(e) => setSelectedShiftFilter(e.target.value as any)}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+            >
+              <option value="ALL">Todos os Turnos</option>
+              <option value="shift1">1º T</option>
+              <option value="shift2">2º T</option>
+              <option value="shift3">3º T</option>
+            </select>
+
+            {/* Toggle Apenas com Apontamento */}
+            <button
+              onClick={() => setOnlyWithNotes()}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                onlyWithNotes
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
+                  : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Apenas com Apontamento</span>
+            </button>
+          </div>
+
+          <div className="text-xs text-slate-400 font-mono">
+            Exibindo: <strong className="text-cyan-400">{displayedMachines.length}</strong> células
+          </div>
         </div>
       </div>
 
