@@ -266,9 +266,9 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
               className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
             >
               <option value="ALL">Todos os Turnos</option>
-              <option value="shift1">1º T</option>
-              <option value="shift2">2º T</option>
-              <option value="shift3">3º T</option>
+              <option value="shift1">Turno 1º T</option>
+              <option value="shift2">Turno 2º T</option>
+              <option value="shift3">Turno 3º T</option>
             </select>
 
             {/* Toggle Apenas com Apontamento */}
@@ -302,7 +302,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
               </h1>
               <p className="text-[9pt] font-bold text-black mt-0.5">
                 Data: {formattedDate} ({weekdayName})
-                {selectedShiftFilter !== 'ALL' && ` • Filtro: ${selectedShiftFilter === 'shift1' ? '1º T' : selectedShiftFilter === 'shift2' ? '2º T' : '3º T'}`}
+                {selectedShiftFilter !== 'ALL' && ` • Filtro: ${selectedShiftFilter === 'shift1' ? 'Turno 1º T' : selectedShiftFilter === 'shift2' ? 'Turno 2º T' : 'Turno 3º T'}`}
                 {onlyWithNotes && ' • Apenas com apontamentos'}
               </p>
             </div>
@@ -325,7 +325,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                     className="p-3 border-l border-slate-800 print:border-gray-400"
                     title="1º Turno (05:00 - 14:18)"
                   >
-                    1º T
+                    Turno 1º T
                   </th>
                 )}
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift2') && (
@@ -333,7 +333,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                     className="p-3 border-l border-slate-800 print:border-gray-400"
                     title="2º Turno (14:18 - 23:25)"
                   >
-                    2º T
+                    Turno 2º T
                   </th>
                 )}
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift3') && (
@@ -341,7 +341,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                     className="p-3 border-l border-slate-800 print:border-gray-400"
                     title="3º Turno (23:25 - 05:00)"
                   >
-                    3º T
+                    Turno 3º T
                   </th>
                 )}
               </tr>
@@ -399,15 +399,15 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         <div className="hidden print:grid grid-cols-3 gap-6 text-center text-[8pt] p-4 mt-6 border-t border-gray-400">
           <div>
             <div className="border-b border-black mb-1 h-6" />
-            <span className="font-bold">Visto 1º T</span>
+            <span className="font-bold">Visto Turno 1º T</span>
           </div>
           <div>
             <div className="border-b border-black mb-1 h-6" />
-            <span className="font-bold">Visto 2º T</span>
+            <span className="font-bold">Visto Turno 2º T</span>
           </div>
           <div>
             <div className="border-b border-black mb-1 h-6" />
-            <span className="font-bold">Visto 3º T / Supervisão</span>
+            <span className="font-bold">Visto Turno 3º T / Supervisão</span>
           </div>
         </div>
       </div>

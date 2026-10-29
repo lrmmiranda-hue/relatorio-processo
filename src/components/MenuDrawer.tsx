@@ -267,9 +267,9 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
               <div className="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
                 {[
                   { id: 'ALL', label: 'Todos' },
-                  { id: 'shift1', label: '1º T' },
-                  { id: 'shift2', label: '2º T' },
-                  { id: 'shift3', label: '3º T' }
+                  { id: 'shift1', label: '1º Turno' },
+                  { id: 'shift2', label: '2º Turno' },
+                  { id: 'shift3', label: '3º Turno' }
                 ].map((item) => (
                   <button
                     key={item.id}

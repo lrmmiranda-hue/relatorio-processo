@@ -389,8 +389,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* LINHA INFERIOR COMPACTA: Modos de Visualização e Navegação de Data */}
-          <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-800/60">
+          {/* LINHA INFERIOR COMPACTA: Modos de Visualização, Data e Turnos Lado a Lado */}
+          <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-slate-800/60">
             {/* Seletor de Modo: Leitura vs Preenchimento */}
             <div className="flex items-center p-0.5 bg-slate-950 border border-slate-800 rounded-xl shrink-0">
               <button
@@ -419,99 +419,101 @@ export default function App() {
               </button>
             </div>
 
-            {/* Navegação de Data com Ícone de Calendário na mesma cor da fonte */}
-            <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-xl border border-slate-800">
-              <button
-                onClick={() => handleShiftDate(-1)}
-                className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
-                title="Dia anterior"
-              >
-                <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </button>
+            {/* Grupo da Direita: Data e Turnos Lado a Lado */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {/* Navegação de Data com Ícone de Calendário na mesma cor da fonte */}
+              <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-xl border border-slate-800 shrink-0">
+                <button
+                  onClick={() => handleShiftDate(-1)}
+                  className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+                  title="Dia anterior"
+                >
+                  <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </button>
 
-              <div className="flex items-center gap-1 px-1 text-cyan-300 font-mono font-bold text-[11px] sm:text-xs">
-                <Calendar className="w-3.5 h-3.5 text-cyan-300 shrink-0 pointer-events-none" />
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
-                />
+                <div className="flex items-center gap-1 px-1 text-cyan-300 font-mono font-bold text-[11px] sm:text-xs">
+                  <Calendar className="w-3.5 h-3.5 text-cyan-300 shrink-0 pointer-events-none" />
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
+                  />
+                </div>
+
+                <button
+                  onClick={() => handleShiftDate(1)}
+                  className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+                  title="Próximo dia"
+                >
+                  <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </button>
+
+                {selectedDate !== getLocalDateString() && (
+                  <button
+                    onClick={() => setSelectedDate(getLocalDateString())}
+                    className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer"
+                    title="Voltar para Hoje"
+                  >
+                    Hoje
+                  </button>
+                )}
               </div>
 
-              <button
-                onClick={() => handleShiftDate(1)}
-                className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
-                title="Próximo dia"
-              >
-                <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </button>
+              {/* Seletor dos 3 Turnos: Colocado DIRETAMENTE DO LADO DA DATA com formato 1º Turno, 2º Turno, 3º Turno */}
+              <div className="flex items-center gap-1 p-0.5 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto shrink-0">
+                {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
+                  const cfg = SHIFTS_CONFIG[sk];
+                  const isSelected = activeShift === sk;
+                  const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
+                  const isUnlocked = unlockedShifts[sk];
+                  const shiftLabels: Record<ShiftKey, string> = {
+                    shift1: '1º Turno',
+                    shift2: '2º Turno',
+                    shift3: '3º Turno'
+                  };
 
-              {selectedDate !== getLocalDateString() && (
-                <button
-                  onClick={() => setSelectedDate(getLocalDateString())}
-                  className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer"
-                  title="Voltar para Hoje"
-                >
-                  Hoje
-                </button>
-              )}
+                  return (
+                    <button
+                      key={sk}
+                      onClick={() => {
+                        setActiveShift(sk);
+                        if (viewMode === 'READ') {
+                          setSelectedShiftFilter(sk);
+                        }
+                      }}
+                      title={`${cfg.name} (${cfg.startTime} - ${cfg.endTime})`}
+                      className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                        isSelected
+                          ? 'bg-slate-800 text-cyan-300 shadow-sm border border-slate-700'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      }`}
+                    >
+                      <span>{shiftLabels[sk]}</span>
+
+                      {/* Indicador de Status do Turno */}
+                      {isNow ? (
+                        <span
+                          className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"
+                          title="Turno em andamento no momento"
+                        />
+                      ) : isAdmin || isUnlocked ? (
+                        <span title="Edição liberada pelo administrador" className="shrink-0">
+                          <Unlock className="w-2.5 h-2.5 text-cyan-400" />
+                        </span>
+                      ) : (
+                        <span title="Fora do horário do turno" className="shrink-0">
+                          <Lock className="w-2.5 h-2.5 text-slate-500" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
       </header>
-
-      {/* ── BARRA DE SELEÇÃO DOS TURNOS (APENAS EM MODO DE EDIÇÃO) ── */}
-      {viewMode === 'EDIT' && (
-        <section className="no-print bg-slate-900/60 border-b border-slate-800/80 px-4 py-2.5">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-1.5 p-1 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto no-scrollbar">
-              {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
-                const cfg = SHIFTS_CONFIG[sk];
-                const isSelected = activeShift === sk;
-                const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
-                const isUnlocked = unlockedShifts[sk];
-                const shortNames: Record<ShiftKey, string> = {
-                  shift1: '1º T',
-                  shift2: '2º T',
-                  shift3: '3º T'
-                };
-
-                return (
-                  <button
-                    key={sk}
-                    onClick={() => setActiveShift(sk)}
-                    title={`${cfg.name} (${cfg.startTime} - ${cfg.endTime})`}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                      isSelected
-                        ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                    }`}
-                  >
-                    <span>{shortNames[sk]}</span>
-
-                    {/* Indicador de Status do Turno */}
-                    {isNow ? (
-                      <span
-                        className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
-                        title="Turno em andamento no momento"
-                      />
-                    ) : isAdmin || isUnlocked ? (
-                      <span title="Edição liberada pelo administrador">
-                        <Unlock className="w-3 h-3 text-cyan-400" />
-                      </span>
-                    ) : (
-                      <span title="Fora do horário do turno (bloqueado para operadores)">
-                        <Lock className="w-3 h-3 text-slate-500" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ── BANNER DE STATUS / BLOQUEIO DE HORÁRIO (APENAS MODO PREENCHIMENTO) ── */}
       {viewMode === 'EDIT' && (
