@@ -404,21 +404,24 @@ export default function App() {
                 const isSelected = activeShift === sk;
                 const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
                 const isUnlocked = unlockedShifts[sk];
+                const shortNames: Record<ShiftKey, string> = {
+                  shift1: '1º T',
+                  shift2: '2º T',
+                  shift3: '3º T'
+                };
 
                 return (
                   <button
                     key={sk}
                     onClick={() => setActiveShift(sk)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    title={`${cfg.name} (${cfg.startTime} - ${cfg.endTime})`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                       isSelected
                         ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                     }`}
                   >
-                    <span>{cfg.name}</span>
-                    <span className="text-[10px] font-normal text-slate-400 font-mono">
-                      ({cfg.startTime} - {cfg.endTime})
-                    </span>
+                    <span>{shortNames[sk]}</span>
 
                     {/* Indicador de Status do Turno */}
                     {isNow ? (

@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { DailyProcessReport } from '../types';
-import { SHIFTS_CONFIG } from '../shiftUtils';
-import { Printer, Search, FileText, CheckCircle2, AlertTriangle, Wrench, Eye } from 'lucide-react';
+import { Search, FileText, CheckCircle2, AlertTriangle, Wrench } from 'lucide-react';
 
 interface MachineMatrixViewProps {
   report: DailyProcessReport;
@@ -45,31 +44,6 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
       return true;
     });
   }, [machinesList, searchQuery, onlyWithNotes, selectedShiftFilter, report]);
-
-  // Totalizadores de ocorrências
-  const stats = useMemo(() => {
-    let okCount = 0;
-    let semBrutoCount = 0;
-    let manutencaoCount = 0;
-    let notasCount = 0;
-
-    for (const sk of ['shift1', 'shift2', 'shift3'] as const) {
-      const shiftMachines = report.shifts?.[sk]?.machines || {};
-      for (const val of Object.values(shiftMachines)) {
-        const t = (val || '').trim();
-        if (t === 'OK') okCount++;
-        else if (t === 'Sem Bruto') semBrutoCount++;
-        else if (t === 'Manutenção') manutencaoCount++;
-        else if (t) notasCount++;
-      }
-    }
-
-    return { okCount, semBrutoCount, manutencaoCount, notasCount };
-  }, [report]);
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   const renderCellContent = (val: string, shiftKey: 'shift1' | 'shift2' | 'shift3') => {
     const trimmed = (val || '').trim();
@@ -190,46 +164,8 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         }
       `}</style>
 
-      {/* ── BARRA SUPERIOR DO MODO LEITURA (Filtros, Contadores e Impressão) ── */}
-      <div className="no-print bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-lg">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              <Eye className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                Painel por Máquinas & Leitura
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-cyan-300 border border-slate-700">
-                  {formattedDate} ({weekdayName})
-                </span>
-              </h2>
-              <p className="text-[11px] text-slate-400">
-                Visão consolidada de todas as células preenchidas nos 3 turnos
-              </p>
-            </div>
-          </div>
-
-          {/* Badges de Totais */}
-          <div className="hidden lg:flex items-center gap-1.5 pl-3 border-l border-slate-800 text-xs">
-            <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20 text-[11px]">
-              {stats.okCount} OK
-            </span>
-            <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 font-bold border border-amber-500/20 text-[11px]">
-              {stats.semBrutoCount} Sem Bruto
-            </span>
-            <span className="px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 font-bold border border-red-500/20 text-[11px]">
-              {stats.manutencaoCount} Manutenção
-            </span>
-            {stats.notasCount > 0 && (
-              <span className="px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 font-bold border border-cyan-500/20 text-[11px]">
-                {stats.notasCount} Ocorrências
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Controles de Busca, Filtro de Turno e Impressão */}
+      {/* ── BARRA DE FILTROS DA MATRIZ ── */}
+      <div className="no-print bg-slate-900 border border-slate-800 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
           {/* Busca */}
           <div className="relative">
@@ -238,7 +174,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar célula..."
-              className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-36 sm:w-44"
+              className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-40 sm:w-48"
             />
             <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
           </div>
@@ -250,34 +186,27 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
             className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
           >
             <option value="ALL">Todos os Turnos</option>
-            <option value="shift1">Apenas 1º Turno</option>
-            <option value="shift2">Apenas 2º Turno</option>
-            <option value="shift3">Apenas 3º Turno</option>
+            <option value="shift1">1º T</option>
+            <option value="shift2">2º T</option>
+            <option value="shift3">3º T</option>
           </select>
 
-          {/* Toggle Apenas com Ocorrências */}
+          {/* Toggle Apenas com Apontamento */}
           <button
             onClick={() => setOnlyWithNotes(!onlyWithNotes)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
               onlyWithNotes
-                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-xs'
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
                 : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Apenas com Apontamento</span>
-            <span className="sm:hidden">Apontados</span>
+            <span>Apenas com Apontamento</span>
           </button>
+        </div>
 
-          {/* Botão de Impressão Idêntico */}
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-lg shadow-cyan-500/20"
-            title="Imprimir relatório diário em A4 Paisagem"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Imprimir Relatório</span>
-          </button>
+        <div className="text-xs text-slate-400 font-mono">
+          Exibindo: <strong className="text-cyan-400">{displayedMachines.length}</strong> células
         </div>
       </div>
 
@@ -292,7 +221,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
               </h1>
               <p className="text-[9pt] font-bold text-black mt-0.5">
                 Data: {formattedDate} ({weekdayName})
-                {selectedShiftFilter !== 'ALL' && ` • Filtro: ${SHIFTS_CONFIG[selectedShiftFilter].name}`}
+                {selectedShiftFilter !== 'ALL' && ` • Filtro: ${selectedShiftFilter === 'shift1' ? '1º T' : selectedShiftFilter === 'shift2' ? '2º T' : '3º T'}`}
                 {onlyWithNotes && ' • Apenas com apontamentos'}
               </p>
             </div>
@@ -311,18 +240,27 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                   Célula / Máquina
                 </th>
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift1') && (
-                  <th className="p-3 border-l border-slate-800 print:border-gray-400">
-                    1º Turno (05:00 - 14:18)
+                  <th 
+                    className="p-3 border-l border-slate-800 print:border-gray-400"
+                    title="1º Turno (05:00 - 14:18)"
+                  >
+                    1º T
                   </th>
                 )}
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift2') && (
-                  <th className="p-3 border-l border-slate-800 print:border-gray-400">
-                    2º Turno (14:18 - 23:25)
+                  <th 
+                    className="p-3 border-l border-slate-800 print:border-gray-400"
+                    title="2º Turno (14:18 - 23:25)"
+                  >
+                    2º T
                   </th>
                 )}
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift3') && (
-                  <th className="p-3 border-l border-slate-800 print:border-gray-400">
-                    3º Turno (23:25 - 05:00)
+                  <th 
+                    className="p-3 border-l border-slate-800 print:border-gray-400"
+                    title="3º Turno (23:25 - 05:00)"
+                  >
+                    3º T
                   </th>
                 )}
               </tr>
@@ -380,15 +318,15 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         <div className="hidden print:grid grid-cols-3 gap-6 text-center text-[8pt] p-4 mt-6 border-t border-gray-400">
           <div>
             <div className="border-b border-black mb-1 h-6" />
-            <span className="font-bold">Visto 1º Turno</span>
+            <span className="font-bold">Visto 1º T</span>
           </div>
           <div>
             <div className="border-b border-black mb-1 h-6" />
-            <span className="font-bold">Visto 2º Turno</span>
+            <span className="font-bold">Visto 2º T</span>
           </div>
           <div>
             <div className="border-b border-black mb-1 h-6" />
-            <span className="font-bold">Visto 3º Turno / Supervisão</span>
+            <span className="font-bold">Visto 3º T / Supervisão</span>
           </div>
         </div>
       </div>
