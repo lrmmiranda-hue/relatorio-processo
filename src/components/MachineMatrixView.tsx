@@ -284,10 +284,6 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
               <span>Apenas com Apontamento</span>
             </button>
           </div>
-
-          <div className="text-xs text-slate-400 font-mono">
-            Exibindo: <strong className="text-cyan-400">{displayedMachines.length}</strong> células
-          </div>
         </div>
       </div>
 

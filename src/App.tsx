@@ -16,7 +16,6 @@ import {
   Eye, 
   PenLine, 
   Menu, 
-  Calendar, 
   Filter,
   History,
   ArrowRight,
@@ -323,15 +322,137 @@ export default function App() {
 
   const currentShiftData = report?.shifts?.[activeShift] || getEmptyShift();
 
+  // Controles de Modo (Leitura/Preencher), Data e Turnos
+  const renderHeaderControls = () => (
+    <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar flex-nowrap shrink-0">
+      {/* Seletor de Modo: Leitura vs Preenchimento */}
+      <div className="flex items-center p-0.5 bg-slate-950 border border-slate-800 rounded-xl shrink-0">
+        <button
+          onClick={() => setViewMode('READ')}
+          className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+            viewMode === 'READ'
+              ? 'bg-cyan-500 text-slate-950 shadow-sm'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900'
+          }`}
+          title="Visualizar matriz de todas as máquinas nos 3 turnos"
+        >
+          <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          <span>Leitura</span>
+        </button>
+        <button
+          onClick={() => setViewMode('EDIT')}
+          className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+            viewMode === 'EDIT'
+              ? 'bg-cyan-500 text-slate-950 shadow-sm'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900'
+          }`}
+          title="Preencher apontamentos do turno"
+        >
+          <PenLine className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          <span>Preencher</span>
+        </button>
+      </div>
+
+      {/* Navegação de Data - Colocada DIRETAMENTE NA FRENTE DO PREENCHER */}
+      <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-xl border border-slate-800 shrink-0">
+        <button
+          onClick={() => handleShiftDate(-1)}
+          className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+          title="Dia anterior"
+        >
+          <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+        </button>
+
+        <div className="flex items-center px-1 text-cyan-300 font-mono font-bold text-[11px] sm:text-xs">
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
+          />
+        </div>
+
+        <button
+          onClick={() => handleShiftDate(1)}
+          className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+          title="Próximo dia"
+        >
+          <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+        </button>
+
+        {selectedDate !== getLocalDateString() && (
+          <button
+            onClick={() => setSelectedDate(getLocalDateString())}
+            className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer"
+            title="Voltar para Hoje"
+          >
+            Hoje
+          </button>
+        )}
+      </div>
+
+      {/* Seletor dos 3 Turnos: Colocado DIRETAMENTE DO LADO DA DATA */}
+      <div className="flex items-center gap-1 p-0.5 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto shrink-0">
+        {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
+          const cfg = SHIFTS_CONFIG[sk];
+          const isSelected = activeShift === sk;
+          const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
+          const isUnlocked = unlockedShifts[sk];
+          const shiftLabels: Record<ShiftKey, string> = {
+            shift1: '1º Turno',
+            shift2: '2º Turno',
+            shift3: '3º Turno'
+          };
+
+          return (
+            <button
+              key={sk}
+              onClick={() => {
+                setActiveShift(sk);
+                if (viewMode === 'READ') {
+                  setSelectedShiftFilter(sk);
+                }
+              }}
+              title={`${cfg.name} (${cfg.startTime} - ${cfg.endTime})`}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                isSelected
+                  ? 'bg-slate-800 text-cyan-300 shadow-sm border border-slate-700'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+              }`}
+            >
+              <span>{shiftLabels[sk]}</span>
+
+              {/* Indicador de Status do Turno */}
+              {isNow ? (
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"
+                  title="Turno em andamento no momento"
+                />
+              ) : isAdmin || isUnlocked ? (
+                <span title="Edição liberada pelo administrador" className="shrink-0">
+                  <Unlock className="w-2.5 h-2.5 text-cyan-400" />
+                </span>
+              ) : (
+                <span title="Fora do horário do turno" className="shrink-0">
+                  <Lock className="w-2.5 h-2.5 text-slate-500" />
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-white ${theme}`}>
       {/* ── TOPO DA APLICAÇÃO (ULTRA COMPACTO PARA CELULAR E DESKTOP) ── */}
       <header className="no-print bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-2.5 py-1.5 sm:px-4 sm:py-2">
         <div className="max-w-7xl mx-auto flex flex-col gap-1.5">
-          {/* LINHA SUPERIOR: Logo ATMS (canto esquerdo), Salvar e Menu (canto superior direito) */}
-          <div className="flex items-center justify-between gap-2">
+          {/* LINHA SUPERIOR: Logo ATMS (canto esquerdo), Controles no modo PC (centro), Salvar e Menu/Login (canto direito) */}
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Canto Esquerdo: Logo ATMS do sistema */}
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 shrink-0">
               <img src={logo1Img} alt="ATMS" className="h-6 sm:h-7 w-auto object-contain shrink-0" />
               <div className="min-w-0">
                 <h1 className="text-xs sm:text-sm font-bold text-white tracking-tight leading-tight truncate">
@@ -346,6 +467,11 @@ export default function App() {
                   </span>
                 </div>
               </div>
+            </div>
+
+            {/* MODO COMPUTADOR: Leitura/Preencher, Data e Turnos NA PARTE DE CIMA */}
+            <div className="hidden sm:flex items-center shrink-0">
+              {renderHeaderControls()}
             </div>
 
             {/* Canto Superior Direito: Mesma caixa unificada */}
@@ -440,128 +566,9 @@ export default function App() {
             </div>
           </div>
 
-          {/* LINHA INFERIOR COMPACTA: Modos de Visualização, Data e Turnos Lado a Lado */}
-          <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-slate-800/60">
-            {/* Seletor de Modo: Leitura vs Preenchimento */}
-            <div className="flex items-center p-0.5 bg-slate-950 border border-slate-800 rounded-xl shrink-0">
-              <button
-                onClick={() => setViewMode('READ')}
-                className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'READ'
-                    ? 'bg-cyan-500 text-slate-950 shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-                title="Visualizar matriz de todas as máquinas nos 3 turnos"
-              >
-                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span>Leitura</span>
-              </button>
-              <button
-                onClick={() => setViewMode('EDIT')}
-                className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'EDIT'
-                    ? 'bg-cyan-500 text-slate-950 shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-                title="Preencher apontamentos do turno"
-              >
-                <PenLine className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span>Preencher</span>
-              </button>
-            </div>
-
-            {/* Grupo da Direita: Data e Turnos Lado a Lado */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {/* Navegação de Data com Ícone de Calendário na mesma cor da fonte */}
-              <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-xl border border-slate-800 shrink-0">
-                <button
-                  onClick={() => handleShiftDate(-1)}
-                  className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
-                  title="Dia anterior"
-                >
-                  <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                </button>
-
-                <div className="flex items-center gap-1 px-1 text-cyan-300 font-mono font-bold text-[11px] sm:text-xs">
-                  <Calendar className="w-3.5 h-3.5 text-cyan-300 shrink-0 pointer-events-none" />
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
-                  />
-                </div>
-
-                <button
-                  onClick={() => handleShiftDate(1)}
-                  className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
-                  title="Próximo dia"
-                >
-                  <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                </button>
-
-                {selectedDate !== getLocalDateString() && (
-                  <button
-                    onClick={() => setSelectedDate(getLocalDateString())}
-                    className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer"
-                    title="Voltar para Hoje"
-                  >
-                    Hoje
-                  </button>
-                )}
-              </div>
-
-              {/* Seletor dos 3 Turnos: Colocado DIRETAMENTE DO LADO DA DATA com formato 1º Turno, 2º Turno, 3º Turno */}
-              <div className="flex items-center gap-1 p-0.5 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto shrink-0">
-                {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
-                  const cfg = SHIFTS_CONFIG[sk];
-                  const isSelected = activeShift === sk;
-                  const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
-                  const isUnlocked = unlockedShifts[sk];
-                  const shiftLabels: Record<ShiftKey, string> = {
-                    shift1: '1º Turno',
-                    shift2: '2º Turno',
-                    shift3: '3º Turno'
-                  };
-
-                  return (
-                    <button
-                      key={sk}
-                      onClick={() => {
-                        setActiveShift(sk);
-                        if (viewMode === 'READ') {
-                          setSelectedShiftFilter(sk);
-                        }
-                      }}
-                      title={`${cfg.name} (${cfg.startTime} - ${cfg.endTime})`}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-slate-800 text-cyan-300 shadow-sm border border-slate-700'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                      }`}
-                    >
-                      <span>{shiftLabels[sk]}</span>
-
-                      {/* Indicador de Status do Turno */}
-                      {isNow ? (
-                        <span
-                          className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"
-                          title="Turno em andamento no momento"
-                        />
-                      ) : isAdmin || isUnlocked ? (
-                        <span title="Edição liberada pelo administrador" className="shrink-0">
-                          <Unlock className="w-2.5 h-2.5 text-cyan-400" />
-                        </span>
-                      ) : (
-                        <span title="Fora do horário do turno" className="shrink-0">
-                          <Lock className="w-2.5 h-2.5 text-slate-500" />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          {/* LINHA INFERIOR: Apenas no Modo Celular (no computador fica na parte de cima) */}
+          <div className="sm:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t border-slate-800/60 flex-nowrap">
+            {renderHeaderControls()}
           </div>
         </div>
       </header>
@@ -814,10 +821,6 @@ export default function App() {
                     <FileText className="w-3.5 h-3.5" />
                     <span>Apenas com Apontamento</span>
                   </button>
-                </div>
-
-                <div className="text-xs text-slate-400 font-mono">
-                  Exibindo: <strong className="text-cyan-400">{filteredMachines.length}</strong> máquinas
                 </div>
               </div>
 
