@@ -735,7 +735,7 @@ export default function App() {
                 <div className="flex items-center gap-2 truncate">
                   <Filter className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
                   <span className="truncate">
-                    Filtro: {selectedMachineFilter !== 'ALL' && `[${selectedMachineFilter}]`} {searchQuery && `"${searchQuery}"`} {filterOnlyWithNotes && '• Com apontamento'} {selectedShiftFilter !== 'ALL' && `• ${selectedShiftFilter === 'shift1' ? '1º T' : selectedShiftFilter === 'shift2' ? '2º T' : '3º T'}`}
+                    Filtro: {selectedMachineFilter !== 'ALL' && `[${selectedMachineFilter}]`} {searchQuery && `"${searchQuery}"`} {filterOnlyWithNotes && '• Com apontamento'} {selectedShiftFilter !== 'ALL' && `• ${selectedShiftFilter === 'shift1' ? '1º Turno' : selectedShiftFilter === 'shift2' ? '2º Turno' : '3º Turno'}`}
                   </span>
                 </div>
                 <button
