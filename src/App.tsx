@@ -19,7 +19,11 @@ import {
   Calendar, 
   Filter,
   History,
-  ArrowRight
+  ArrowRight,
+  Sun,
+  Moon,
+  LogIn,
+  LogOut
 } from 'lucide-react';
 import logo1Img from './assets/logo1.png';
 import { 
@@ -344,7 +348,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Canto Superior Direito: Salvar (se edit) e Botão do Menu Principal */}
+            {/* Canto Superior Direito: Mesma caixa unificada */}
             <div className="flex items-center gap-1.5 shrink-0">
               {/* Botão Salvar (Visível no modo de edição) */}
               {viewMode === 'EDIT' && (
@@ -374,15 +378,62 @@ export default function App() {
                 </button>
               )}
 
-              {/* Botão de Menu com ações: Filtro por máquina, deslogar e alternar modo claro */}
+              {/* MODO PC: Alternar Modo Claro/Escuro do lado do Login */}
+              <button
+                onClick={toggleTheme}
+                className="hidden sm:flex p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-400 border border-slate-700 transition-colors cursor-pointer shadow-sm items-center justify-center"
+                title={theme === 'dark' ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <Moon className="w-4 h-4 text-cyan-400" />
+                )}
+              </button>
+
+              {/* MODO PC: Login no canto direito */}
+              <div className="hidden sm:flex items-center">
+                {userProfile ? (
+                  <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-slate-700">
+                    <div className="text-right">
+                      <div 
+                        className="text-xs font-semibold text-white truncate max-w-[120px]"
+                        title={userProfile.username || userProfile.name || ''}
+                      >
+                        {userProfile.username || userProfile.name}
+                      </div>
+                      <div className="text-[9px] text-cyan-400 font-mono leading-none">
+                        {isAdmin ? 'ADMIN' : 'OPERADOR'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="p-1 rounded-lg hover:bg-red-500/20 hover:text-red-400 text-slate-400 transition-colors cursor-pointer"
+                      title="Sair da conta"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                    title="Entrar com Usuário ou Administrador"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Entrar</span>
+                  </button>
+                )}
+              </div>
+
+              {/* MODO CELULAR: Apenas no mobile exibe o botão Menu */}
               <button
                 onClick={() => setIsMenuOpen(true)}
-                className="relative p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-cyan-400 border border-slate-700 transition-colors cursor-pointer shadow-sm flex items-center gap-1"
-                title="Abrir Menu (Filtros por Máquina, Modo Claro, Deslogar)"
+                className="sm:hidden relative p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-cyan-400 border border-slate-700 transition-colors cursor-pointer shadow-sm flex items-center gap-1"
+                title="Abrir Menu (Filtros, Modo Claro, Deslogar)"
               >
-                <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
-                {/* Indicador de filtro ativo */}
-                {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL') && (
+                <Menu className="w-4 h-4 text-cyan-400" />
+                {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL' || selectedMachineFilter !== 'ALL') && (
                   <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse absolute -top-0.5 -right-0.5" />
                 )}
               </button>
@@ -721,7 +772,7 @@ export default function App() {
                     className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
                     title="Filtrar máquina específica"
                   >
-                    <option value="ALL">Todas as Máquinas ({allMachines.length})</option>
+                    <option value="ALL">Todas as Máquinas</option>
                     {allMachines.map((m) => (
                       <option key={m} value={m}>{m}</option>
                     ))}

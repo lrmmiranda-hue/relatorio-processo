@@ -252,7 +252,7 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
                 onChange={(e) => onMachineFilterChange(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
               >
-                <option value="ALL">Todas as Máquinas ({allMachinesList.length})</option>
+                <option value="ALL">Todas as Máquinas</option>
                 {allMachinesList.map((m) => (
                   <option key={m} value={m}>{m}</option>
                 ))}
