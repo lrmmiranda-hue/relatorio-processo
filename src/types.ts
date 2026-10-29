@@ -20,6 +20,7 @@ export interface UserProfile {
   id: string;
   email: string;
   role: 'ADMIN' | 'OPERATOR' | 'READONLY' | 'PENDING';
+  username?: string;
   name?: string;
   createdAt?: number;
 }

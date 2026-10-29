@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Clock, 
-  Printer, 
   Save, 
   Lock, 
   Unlock, 
@@ -20,6 +19,7 @@ import {
   Eye,
   PenLine
 } from 'lucide-react';
+import logo1Img from './assets/logo1.png';
 import { auth, getDailyReportFirebase, saveDailyReportFirebase, getUserProfileFirebase } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
@@ -83,19 +83,46 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Monitora autenticação do Firebase
+  // Monitora autenticação do Firebase e restaura sessão salva de Usuário
   useEffect(() => {
+    const savedUserStr = localStorage.getItem('relatorio_processo_active_user');
+    if (savedUserStr) {
+      try {
+        const parsed = JSON.parse(savedUserStr);
+        setUserProfile(parsed);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     const unsub = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
         const profile = await getUserProfileFirebase(user.uid);
-        setUserProfile(profile);
+        if (profile) {
+          setUserProfile(profile);
+          localStorage.setItem('relatorio_processo_active_user', JSON.stringify(profile));
+        }
       } else {
-        setUserProfile(null);
+        if (!localStorage.getItem('relatorio_processo_active_user')) {
+          setUserProfile(null);
+        }
       }
     });
     return () => unsub();
   }, []);
+
+  // Desconectar sessão (Usuário ou Administrador)
+  const handleLogout = async () => {
+    localStorage.removeItem('relatorio_processo_active_user');
+    setUserProfile(null);
+    setCurrentUser(null);
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.warn("Erro ao deslogar:", err);
+    }
+  };
 
   // Busca PONTUAL do relatório da data selecionada
   useEffect(() => {
@@ -235,161 +262,160 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
-      {/* ── TOPO DA APLICAÇÃO ── */}
-      <header className="no-print bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-4 py-2.5">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          {/* Logo & Título */}
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-tr from-cyan-600 to-blue-500 rounded-xl shadow-lg shadow-cyan-500/20 text-white">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-sm font-bold text-white flex items-center gap-2">
-                Diário de Processo & Turnos
-              </h1>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Clock className="w-3.5 h-3.5 text-slate-500" />
-                <span>{currentTime.toLocaleTimeString()}</span>
-                <span>•</span>
-                <span className="font-semibold text-slate-300">
-                  {SHIFTS_CONFIG[getCurrentActiveShift(currentTime)].name}
-                </span>
+      {/* ── TOPO DA APLICAÇÃO (COMPACTO PARA CELULAR E DESKTOP) ── */}
+      <header className="no-print bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-3 py-2 sm:px-4 sm:py-2.5">
+        <div className="max-w-7xl mx-auto flex flex-col gap-2">
+          {/* LINHA SUPERIOR: Logo ATMS (canto esquerdo) e Login / Usuário (canto superior direito) */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Canto Esquerdo: Logo ATMS do sistema */}
+            <div className="flex items-center gap-2.5">
+              <img src={logo1Img} alt="ATMS" className="h-7 sm:h-8 w-auto object-contain shrink-0" />
+              <div>
+                <h1 className="text-xs sm:text-sm font-bold text-white tracking-tight leading-tight">
+                  Diário de Processo & Turnos
+                </h1>
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-400">
+                  <Clock className="w-3 h-3 text-slate-500" />
+                  <span>{currentTime.toLocaleTimeString()}</span>
+                  <span>•</span>
+                  <span className="font-semibold text-cyan-400">
+                    {SHIFTS_CONFIG[getCurrentActiveShift(currentTime)].name}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Seletor de Modo: Leitura vs Preenchimento */}
-          <div className="flex items-center p-1 bg-slate-950 border border-slate-800 rounded-xl">
-            <button
-              onClick={() => setViewMode('READ')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                viewMode === 'READ'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-              title="Visualizar todas as máquinas preenchidas nos 3 turnos"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              <span>Modo Leitura</span>
-            </button>
-            <button
-              onClick={() => setViewMode('EDIT')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                viewMode === 'EDIT'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-              title="Preencher apontamentos do turno"
-            >
-              <PenLine className="w-3.5 h-3.5" />
-              <span>Preencher Turno</span>
-            </button>
-          </div>
-
-          {/* Ações do Topo */}
-          <div className="flex items-center gap-2">
-            {/* Navegação de Data (ao lado da impressora) */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-              <button
-                onClick={() => handleShiftDate(-1)}
-                className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
-                title="Dia anterior"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-2 py-0.5 rounded-lg bg-transparent text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
-              />
-
-              <button
-                onClick={() => handleShiftDate(1)}
-                className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
-                title="Próximo dia"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-
-              {selectedDate !== getLocalDateString() && (
+            {/* Canto Superior Direito: Entrar / Usuário identificado */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {userProfile || currentUser ? (
+                <div className="flex items-center gap-1.5">
+                  <div className="text-right hidden sm:block">
+                    <div 
+                      className="text-xs font-semibold text-white truncate max-w-[120px]"
+                      title={userProfile?.name || userProfile?.username || currentUser?.email || ''}
+                    >
+                      {userProfile?.username || userProfile?.name || currentUser?.email?.split('@')[0]}
+                    </div>
+                    <div className="text-[9px] text-cyan-400 font-mono">
+                      {isAdmin ? 'ADMIN' : 'OPERADOR'}
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-400 border border-slate-700 transition-colors cursor-pointer"
+                    title="Sair da conta"
+                  >
+                    <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={() => setSelectedDate(getLocalDateString())}
-                  className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer ml-0.5"
-                  title="Voltar para a data de hoje"
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition-colors cursor-pointer shadow-sm"
+                  title="Entrar com Usuário ou Administrador"
                 >
-                  Hoje
+                  <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               )}
             </div>
+          </div>
 
-            {/* Botão de Impressão (apenas ícone) */}
-            <button
-              onClick={() => window.print()}
-              disabled={!report || loading}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
-              title="Imprimir relatório diário completo em A4 Paisagem"
-            >
-              <Printer className="w-4 h-4" />
-            </button>
-
-            {/* Botão Salvar Principal (Visível no modo de edição) */}
-            {viewMode === 'EDIT' && (
+          {/* LINHA INFERIOR COMPACTA: Modos, Navegação de Data e Salvar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
+            {/* Seletor de Modo: Leitura vs Preenchimento */}
+            <div className="flex items-center p-0.5 bg-slate-950 border border-slate-800 rounded-xl">
               <button
-                onClick={handleSaveReport}
-                disabled={!canEdit || loading || saving}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                  saveSuccess
-                    ? 'bg-emerald-500 text-white shadow-emerald-500/20'
-                    : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
+                onClick={() => setViewMode('READ')}
+                className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  viewMode === 'READ'
+                    ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
                 }`}
-                title="Salvar alterações do relatório"
+                title="Visualizar matriz de todas as máquinas nos 3 turnos"
               >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : saveSuccess ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span className="hidden sm:inline">Salvo!</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span className="hidden sm:inline">Salvar</span>
-                  </>
-                )}
+                <Eye className="w-3.5 h-3.5" />
+                <span>Modo Leitura</span>
               </button>
-            )}
-
-            {/* Usuário / Login (apenas ícone se não logado) */}
-            {currentUser ? (
-              <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-800">
-                <div className="text-right hidden lg:block">
-                  <div className="text-xs font-semibold text-white truncate max-w-[120px]">
-                    {currentUser.email?.split('@')[0]}
-                  </div>
-                  <div className="text-[9px] text-cyan-400 font-mono">
-                    {isAdmin ? 'ADMIN' : 'OPERADOR'}
-                  </div>
-                </div>
-                <button
-                  onClick={() => signOut(auth)}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-400 border border-slate-700 transition-colors cursor-pointer"
-                  title="Sair da conta"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
               <button
-                onClick={() => setIsLoginModalOpen(true)}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition-colors cursor-pointer"
-                title="Entrar"
+                onClick={() => setViewMode('EDIT')}
+                className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  viewMode === 'EDIT'
+                    ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
+                title="Preencher apontamentos do turno"
               >
-                <LogIn className="w-4 h-4" />
+                <PenLine className="w-3.5 h-3.5" />
+                <span>Preencher Turno</span>
               </button>
-            )}
+            </div>
+
+            {/* Data e Botão Salvar */}
+            <div className="flex items-center gap-2">
+              {/* Navegação de Data */}
+              <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-xl border border-slate-800">
+                <button
+                  onClick={() => handleShiftDate(-1)}
+                  className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+                  title="Dia anterior"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="px-1.5 py-0.5 rounded-lg bg-transparent text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
+                />
+
+                <button
+                  onClick={() => handleShiftDate(1)}
+                  className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+                  title="Próximo dia"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+
+                {selectedDate !== getLocalDateString() && (
+                  <button
+                    onClick={() => setSelectedDate(getLocalDateString())}
+                    className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer"
+                    title="Voltar para Hoje"
+                  >
+                    Hoje
+                  </button>
+                )}
+              </div>
+
+              {/* Botão Salvar Principal (Visível no modo de edição) */}
+              {viewMode === 'EDIT' && (
+                <button
+                  onClick={handleSaveReport}
+                  disabled={!canEdit || loading || saving}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                    saveSuccess
+                      ? 'bg-emerald-500 text-white shadow-emerald-500/20'
+                      : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
+                  }`}
+                  title="Salvar alterações do relatório"
+                >
+                  {saving ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : saveSuccess ? (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Salvo!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Salvar</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -713,6 +739,7 @@ export default function App() {
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
+        onUserIdentified={(profile) => setUserProfile(profile)}
       />
 
       {/* ── VISUALIZAÇÃO DE IMPRESSÃO (Matriz Completa A4 Paisagem quando em modo de Edição) ── */}

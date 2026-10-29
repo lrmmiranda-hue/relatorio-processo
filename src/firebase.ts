@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import firebaseConfig from './firebase-applet-config.json';
 import type { DailyProcessReport, UserProfile } from './types';
 
@@ -59,5 +59,19 @@ export async function getUserProfileFirebase(uid: string): Promise<UserProfile |
   } catch (err) {
     console.warn('Não foi possível obter perfil do usuário:', err);
     return null;
+  }
+}
+
+// Busca lista de todos os perfis de usuários cadastrados no ATMS
+export async function getAllUserProfilesFirebase(): Promise<UserProfile[]> {
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    return snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data()
+    })) as UserProfile[];
+  } catch (err) {
+    console.error('Erro ao buscar usuários do sistema:', err);
+    return [];
   }
 }
