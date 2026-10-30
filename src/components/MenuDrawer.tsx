@@ -292,18 +292,18 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
                 onClick={onToggleOnlyWithNotes}
                 className={`w-full flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
                   onlyWithNotes
-                    ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-red-500/15 border-red-500/40 text-red-500 dark:text-red-400 font-bold'
+                    : 'bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
-                  <span className="text-xs font-semibold">Apenas com Apontamento</span>
+                  <span className="text-xs font-bold">Apenas com Apontamento</span>
                 </div>
                 <div className={`w-4 h-4 rounded-md border flex items-center justify-center ${
                   onlyWithNotes
-                    ? 'bg-cyan-500 border-cyan-400 text-slate-950'
-                    : 'border-slate-600 bg-slate-800'
+                    ? 'bg-red-600 border-red-500 text-white'
+                    : 'border-slate-400 dark:border-slate-600 bg-slate-200 dark:bg-slate-800'
                 }`}>
                   {onlyWithNotes && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
@@ -313,7 +313,7 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
             {/* Contador de células */}
             <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
               <span>Células encontradas:</span>
-              <span className="font-mono font-bold text-cyan-400">
+              <span className="font-mono font-bold text-red-500 dark:text-red-400">
                 {filteredMachinesCount} <span className="text-slate-500">/ {totalMachinesCount}</span>
               </span>
             </div>

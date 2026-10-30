@@ -262,11 +262,12 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                 {/* Toggle Apenas com Apontamento */}
                 <button
                   onClick={() => setOnlyWithNotes()}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer shrink-0 ${
                     onlyWithNotes
-                      ? 'bg-red-500/15 text-red-400 border-red-500/40'
-                      : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
+                      ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/40 shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700 hover:text-slate-900 dark:hover:text-white'
                   }`}
+                  title="Exibir apenas células com anotações ou ocorrências"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span>Apenas com Apontamento</span>

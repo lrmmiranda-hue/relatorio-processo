@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Clock, 
   Save, 
@@ -6,6 +6,7 @@ import {
   Unlock, 
   KeyRound, 
   CheckCircle2, 
+  Check,
   Trash2, 
   Search, 
   ChevronLeft, 
@@ -208,6 +209,13 @@ export default function App() {
     }
   };
 
+  // Estados para Salvamento Automático
+  const [isAutoSaving, setIsAutoSaving] = useState<boolean>(false);
+  const [lastAutoSavedTime, setLastAutoSavedTime] = useState<Date | null>(null);
+  const [isDirty, setIsDirty] = useState<boolean>(false);
+  const reportRef = useRef<DailyProcessReport | null>(report);
+  reportRef.current = report;
+
   // Busca PONTUAL do relatório da data selecionada
   useEffect(() => {
     let isCancelled = false;
@@ -216,6 +224,8 @@ export default function App() {
       try {
         const data = await getDailyReportFirebase(selectedDate);
         if (!isCancelled) {
+          setIsDirty(false);
+          setLastAutoSavedTime(null);
           if (data) {
             setReport(data);
           } else {
@@ -292,13 +302,37 @@ export default function App() {
   const isShiftUnlocked = unlockedShifts[activeShift] === true;
   const canEdit = isAdmin || isTimeActive || isShiftUnlocked;
 
-  // Função para salvar o relatório no Firebase
+  // Salvamento Automático: Salva no Firebase 1.2 segundos após o usuário terminar de digitar
+  useEffect(() => {
+    if (!isDirty || !report || !canEdit) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsAutoSaving(true);
+        if (reportRef.current) {
+          await saveDailyReportFirebase(reportRef.current);
+          setIsDirty(false);
+          setLastAutoSavedTime(new Date());
+        }
+      } catch (err) {
+        console.error('Erro no salvamento automático:', err);
+      } finally {
+        setIsAutoSaving(false);
+      }
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [report, isDirty, canEdit]);
+
+  // Função para salvar o relatório no Firebase manualmente
   const handleSaveReport = async () => {
     if (!report) return;
     setSaving(true);
     try {
       await saveDailyReportFirebase(report);
+      setIsDirty(false);
       setSaveSuccess(true);
+      setLastAutoSavedTime(new Date());
       setTimeout(() => setSaveSuccess(false), 2500);
     } catch (err: any) {
       alert('Erro ao salvar no Firebase: ' + (err.message || err));
@@ -310,6 +344,7 @@ export default function App() {
   // Modificação de máquina individual
   const handleMachineChange = (machineName: string, value: string) => {
     if (!canEdit || !report) return;
+    setIsDirty(true);
     const currentShift = report.shifts?.[activeShift] || getEmptyShift();
     const updatedMachines = { ...currentShift.machines };
     if (!value.trim()) {
@@ -825,19 +860,6 @@ export default function App() {
                 {/* Barra de Filtro das Máquinas e Busca Global em Todos os Relatórios */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-2.5 border-b border-slate-800">
                   <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    {/* Filtro das Máquinas */}
-                    <select
-                      value={selectedMachineFilter}
-                      onChange={(e) => setSelectedMachineFilter(e.target.value)}
-                      className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
-                      title="Filtrar máquina específica"
-                    >
-                      <option value="ALL">Todas as Máquinas</option>
-                      {allMachines.map((m) => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
-
                     {/* Barra de Pesquisa Global em Todos os Relatórios e Datas */}
                     <div className="relative flex-1 sm:flex-initial w-full sm:w-64">
                       <input
@@ -845,9 +867,9 @@ export default function App() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Buscar em todos os relatórios..."
-                        className="w-full px-2.5 py-1.5 pl-8 pr-7 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                        className="w-full px-2.5 py-1.5 pl-8 pr-7 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-500"
                       />
-                      <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+                      <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-2.5" />
                       {searchQuery && (
                         <button
                           onClick={() => {
@@ -862,14 +884,28 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* Ver apenas com apontamento */}
+                    {/* Filtro das Máquinas */}
+                    <select
+                      value={selectedMachineFilter}
+                      onChange={(e) => setSelectedMachineFilter(e.target.value)}
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs font-bold text-red-600 dark:text-red-400 focus:outline-none focus:border-red-500 cursor-pointer"
+                      title="Filtrar máquina específica"
+                    >
+                      <option value="ALL">Todas as Máquinas</option>
+                      {allMachines.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+
+                    {/* Ver apenas com apontamento - Padronizado com os outros botões */}
                     <button
                       onClick={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer shrink-0 ${
                         filterOnlyWithNotes
-                          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                          : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
+                          ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/40 shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700 hover:text-slate-900 dark:hover:text-white'
                       }`}
+                      title="Exibir apenas células com anotações ou ocorrências"
                     >
                       <FileText className="w-3.5 h-3.5" />
                       <span>Apenas com Apontamento</span>
@@ -879,7 +915,7 @@ export default function App() {
                     {(selectedMachineFilter !== 'ALL' || searchQuery.trim() || filterOnlyWithNotes || selectedDate !== getLocalDateString()) && (
                       <button
                         onClick={handleClearFilters}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 text-xs font-bold cursor-pointer transition-colors shrink-0"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-600 dark:text-red-400 border border-red-500/30 text-xs font-bold cursor-pointer transition-colors shrink-0"
                         title="Limpar todos os filtros e voltar para a data de hoje"
                       >
                         <span>✕ Limpar Filtros</span>
@@ -887,37 +923,57 @@ export default function App() {
                     )}
                   </div>
 
-                {/* Botão Salvar no canto direito (na mesma direção do apenas com apontamento) */}
-                {viewMode === 'EDIT' && (
-                  <button
-                    onClick={handleSaveReport}
-                    disabled={!canEdit || loading || saving}
-                    className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
-                      saveSuccess
-                        ? 'bg-emerald-500 text-white shadow-emerald-500/20'
-                        : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
-                    }`}
-                    title="Salvar alterações do relatório"
-                  >
-                    {saving ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : saveSuccess ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Salvo!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-3.5 h-3.5" />
-                        <span>Salvar</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
+                  {/* Lado Direito: Status de Salvamento Automático + Botão Salvar Manual */}
+                  {viewMode === 'EDIT' && (
+                    <div className="flex items-center justify-end gap-2 w-full sm:w-auto">
+                      {/* Indicador de Salvamento Automático */}
+                      {isAutoSaving ? (
+                        <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-500 animate-pulse bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 shrink-0">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Salvando...</span>
+                        </span>
+                      ) : lastAutoSavedTime && !isDirty ? (
+                        <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20 shrink-0">
+                          <Check className="w-3 h-3" />
+                          <span>Salvo autom. ({lastAutoSavedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})</span>
+                        </span>
+                      ) : isDirty ? (
+                        <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-500/90 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 shrink-0">
+                          <span>Alterações pendentes...</span>
+                        </span>
+                      ) : null}
 
-              {/* Grade de Máquinas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {/* Botão Salvar Manual */}
+                      <button
+                        onClick={handleSaveReport}
+                        disabled={!canEdit || loading || saving}
+                        className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
+                          saveSuccess
+                            ? 'bg-emerald-500 text-white shadow-emerald-500/20'
+                            : 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/20'
+                        }`}
+                        title="Salvar alterações imediatamente no Firebase"
+                      >
+                        {saving ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : saveSuccess ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Salvo!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-3.5 h-3.5" />
+                            <span>Salvar</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Grade de Máquinas */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {filteredMachines.map((machine) => {
                   const val = currentShiftData.machines?.[machine] || '';
                   const hasVal = Boolean(val.trim());
