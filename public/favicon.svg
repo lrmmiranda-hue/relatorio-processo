@@ -1,27 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
-    <linearGradient id="atms-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ef4444" />
-      <stop offset="100%" stop-color="#b91c1c" />
-    </linearGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.35" />
+    <filter id="gear-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.45" />
     </filter>
   </defs>
-  
-  <!-- Fundo Quadrado Arredondado Vermelho ATMS -->
-  <rect x="2" y="2" width="60" height="60" rx="14" ry="14" fill="url(#atms-grad)" filter="url(#shadow)" stroke="#f87171" stroke-width="1.2" />
-  
-  <!-- Letras ATMS em Branco de Alto Contraste -->
-  <text 
-    x="32" 
-    y="38" 
-    fill="#ffffff" 
-    font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
-    font-size="16" 
-    font-weight="900" 
-    letter-spacing="1.2" 
-    text-anchor="middle"
-    dominant-baseline="central"
-  >ATMS</text>
+
+  <!-- Fundo Sutil Escuro de Contraste -->
+  <circle cx="32" cy="32" r="30" fill="#0f1015" />
+
+  <!-- Metade Esquerda da Engrenagem Industrial (Cinza Grafite Escuro) -->
+  <g filter="url(#gear-shadow)">
+    <!-- Dentes e borda esquerda -->
+    <path d="M32 6 
+             C27 6 22 8 18 11 L14 8 L10 13 L13 18 
+             C10 22 9 27 9 32 
+             C9 37 10 42 13 46 L10 51 L14 56 L18 53 
+             C22 56 27 58 32 58 Z" 
+          fill="#333846" stroke="#474f63" stroke-width="1.2" />
+
+    <!-- Metade Direita da Engrenagem (Vermelho Corporativo Vibrante) -->
+    <path d="M32 6 
+             C37 6 42 8 46 11 L50 8 L54 13 L51 18 
+             C54 22 55 27 55 32 
+             C55 37 54 42 51 46 L54 51 L50 56 L46 53 
+             C42 56 37 58 32 58 Z" 
+          fill="#dc2626" stroke="#ef4444" stroke-width="1.2" />
+
+    <!-- Núcleo Circular Interno -->
+    <circle cx="32" cy="32" r="17" fill="#181a20" stroke="#474f63" stroke-width="1.5" />
+
+    <!-- Ícone de Checklist / Apontamento no Centro -->
+    <rect x="23" y="21" width="18" height="22" rx="3" ry="3" fill="#ffffff" />
+    <!-- Cabeçalho do Bloco -->
+    <rect x="27" y="19" width="10" height="4" rx="1.5" fill="#dc2626" />
+    
+    <!-- Linhas e Checks do Apontamento -->
+    <!-- Check 1 -->
+    <path d="M26 27 L27.5 28.5 L30.5 25.5" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="33" y1="27" x2="38" y2="27" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" />
+
+    <!-- Check 2 -->
+    <path d="M26 33 L27.5 34.5 L30.5 31.5" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="33" y1="33" x2="38" y2="33" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" />
+
+    <!-- Check 3 -->
+    <path d="M26 39 L27.5 40.5 L30.5 37.5" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="33" y1="39" x2="38" y2="39" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" />
+  </g>
 </svg>
