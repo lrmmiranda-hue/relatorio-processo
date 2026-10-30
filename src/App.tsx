@@ -875,14 +875,14 @@ export default function App() {
                   return (
                     <div
                       key={machine}
-                      className={`p-3 rounded-xl border transition-all ${
+                      className={`p-2.5 rounded-xl border transition-all ${
                         hasVal
                           ? 'bg-slate-950 border-cyan-500/30 shadow-md shadow-cyan-950/20'
                           : 'bg-slate-950/40 border-slate-800'
                       }`}
                     >
                       {/* Header da Máquina com Botões Rápidos */}
-                      <div className="flex items-center justify-between gap-1 mb-2">
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
                         <span className="text-sm font-bold text-white tracking-wide font-mono">
                           {machine}
                         </span>
@@ -933,7 +933,7 @@ export default function App() {
 
                       {/* Textarea para observações da máquina */}
                       <textarea
-                        rows={2}
+                        rows={3}
                         disabled={!canEdit}
                         value={val}
                         onChange={(e) => handleMachineChange(machine, e.target.value)}
@@ -947,14 +947,14 @@ export default function App() {
 
                       {/* Botão limpar se tiver valor */}
                       {hasVal && canEdit && (
-                        <div className="flex justify-end mt-1">
+                        <div className="flex justify-end mt-0.5">
                           <button
                             type="button"
                             onClick={() => handleMachineChange(machine, '')}
-                            className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-400 hover:text-red-400 transition-colors cursor-pointer py-0 leading-none"
                             title="Limpar anotação desta máquina"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-2.5 h-2.5" />
                             <span>Limpar</span>
                           </button>
                         </div>
