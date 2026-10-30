@@ -15,6 +15,7 @@ interface MachineMatrixViewProps {
   selectedMachineFilter?: string;
   onMachineFilterChange?: (machine: string) => void;
   onOpenMenu?: () => void;
+  onClearFilters?: () => void;
 }
 
 export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
@@ -28,7 +29,8 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
   selectedShiftFilter: externalShiftFilter,
   onShiftFilterChange: setExternalShiftFilter,
   selectedMachineFilter,
-  onMachineFilterChange
+  onMachineFilterChange,
+  onClearFilters
 }) => {
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [internalOnlyWithNotes, setInternalOnlyWithNotes] = useState(false);
@@ -178,83 +180,113 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
       `}</style>
 
       {/* ── BARRA DE FILTROS DA MATRIZ (COMPACTA NO CELULAR E COMPLETA NO DESKTOP) ── */}
-      <div className="no-print">
-        {/* Versão Celular: Exibe apenas se houver filtros ativos */}
-        {(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL') ? (
-          <div className="sm:hidden flex items-center justify-between px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px] mb-1">
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-semibold truncate">
-              Filtros Ativos
-            </span>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                if (onlyWithNotes && toggleExternalOnlyNotes) toggleExternalOnlyNotes();
-                if (setExternalShiftFilter) setExternalShiftFilter('ALL');
-              }}
-              className="text-[10px] text-red-400 hover:text-white font-bold cursor-pointer"
-            >
-              ✕ Limpar Filtros
-            </button>
-          </div>
-        ) : null}
+      {(() => {
+        const hasActiveFilters = Boolean(
+          searchQuery.trim() ||
+          onlyWithNotes ||
+          selectedShiftFilter !== 'ALL' ||
+          (selectedMachineFilter && selectedMachineFilter !== 'ALL')
+        );
 
-        {/* Versão Desktop: Barra Completa */}
-        <div className="hidden sm:flex bg-slate-900 border border-slate-800 rounded-2xl p-2.5 items-center justify-between gap-3 shadow-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Busca */}
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar célula..."
-                className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 w-44"
-              />
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+        const handleResetAllFilters = () => {
+          if (onClearFilters) {
+            onClearFilters();
+          } else {
+            setSearchQuery('');
+            if (onlyWithNotes && toggleExternalOnlyNotes) toggleExternalOnlyNotes();
+            if (setExternalShiftFilter) setExternalShiftFilter('ALL');
+            if (onMachineFilterChange) onMachineFilterChange('ALL');
+          }
+        };
+
+        return (
+          <div className="no-print">
+            {/* Versão Celular: Exibe apenas se houver filtros ativos */}
+            {hasActiveFilters ? (
+              <div className="sm:hidden flex items-center justify-between px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px] mb-1">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-semibold truncate">
+                  Filtros Ativos
+                  {selectedMachineFilter && selectedMachineFilter !== 'ALL' && ` [${selectedMachineFilter}]`}
+                </span>
+                <button
+                  onClick={handleResetAllFilters}
+                  className="text-[10px] text-red-400 hover:text-white font-bold cursor-pointer"
+                >
+                  ✕ Limpar Filtros
+                </button>
+              </div>
+            ) : null}
+
+            {/* Versão Desktop: Barra Completa */}
+            <div className="hidden sm:flex bg-slate-900 border border-slate-800 rounded-2xl p-2.5 items-center justify-between gap-3 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Busca */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar célula..."
+                    className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 w-44"
+                  />
+                  <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+                </div>
+
+                {/* Filtro das Máquinas */}
+                {onMachineFilterChange && (
+                  <select
+                    value={selectedMachineFilter || 'ALL'}
+                    onChange={(e) => onMachineFilterChange(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-red-400 focus:outline-none focus:border-red-500 cursor-pointer"
+                    title="Filtrar máquina específica"
+                  >
+                    <option value="ALL">Todas as Máquinas</option>
+                    {machinesList.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Filtro por Turno */}
+                <select
+                  value={selectedShiftFilter}
+                  onChange={(e) => setSelectedShiftFilter(e.target.value as any)}
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-300 focus:outline-none focus:border-red-500 cursor-pointer"
+                >
+                  <option value="ALL">Todos os Turnos</option>
+                  <option value="shift1">1º Turno</option>
+                  <option value="shift2">2º Turno</option>
+                  <option value="shift3">3º Turno</option>
+                </select>
+
+                {/* Toggle Apenas com Apontamento */}
+                <button
+                  onClick={() => setOnlyWithNotes()}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                    onlyWithNotes
+                      ? 'bg-red-500/15 text-red-400 border-red-500/40'
+                      : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Apenas com Apontamento</span>
+                </button>
+
+                {/* Botão Limpar Filtros no Desktop se houver filtro ativo */}
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleResetAllFilters}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 text-xs font-bold cursor-pointer transition-colors shrink-0"
+                    title="Limpar todos os filtros da tabela"
+                  >
+                    <span>✕ Limpar Filtros</span>
+                  </button>
+                )}
+              </div>
             </div>
-
-            {/* Filtro das Máquinas */}
-            {onMachineFilterChange && (
-              <select
-                value={selectedMachineFilter || 'ALL'}
-                onChange={(e) => onMachineFilterChange(e.target.value)}
-                className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-red-400 focus:outline-none focus:border-red-500 cursor-pointer"
-                title="Filtrar máquina específica"
-              >
-                <option value="ALL">Todas as Máquinas</option>
-                {machinesList.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            )}
-
-            {/* Filtro por Turno */}
-            <select
-              value={selectedShiftFilter}
-              onChange={(e) => setSelectedShiftFilter(e.target.value as any)}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-300 focus:outline-none focus:border-red-500 cursor-pointer"
-            >
-              <option value="ALL">Todos os Turnos</option>
-              <option value="shift1">1º Turno</option>
-              <option value="shift2">2º Turno</option>
-              <option value="shift3">3º Turno</option>
-            </select>
-
-            {/* Toggle Apenas com Apontamento */}
-            <button
-              onClick={() => setOnlyWithNotes()}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
-                onlyWithNotes
-                  ? 'bg-red-500/15 text-red-400 border-red-500/40'
-                  : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Apenas com Apontamento</span>
-            </button>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* ── TABELA MATRIZ DIÁRIA DE CÉLULAS X TURNOS (TELA + IMPRESSÃO) ── */}
       <div id="printable-matrix-report" className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">

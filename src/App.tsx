@@ -143,6 +143,7 @@ export default function App() {
   }, [searchQuery]);
 
   const handleClearFilters = () => {
+    setSelectedDate(getLocalDateString());
     setSearchQuery('');
     setSelectedMachineFilter('ALL');
     setFilterOnlyWithNotes(false);
@@ -150,6 +151,13 @@ export default function App() {
     setGlobalSearchResults([]);
     setHasSearchedGlobal(false);
   };
+
+  // Bloqueio de segurança: Não permite tela do processo (edição) se não estiver conectado a um usuário
+  useEffect(() => {
+    if (!userProfile && viewMode === 'EDIT') {
+      setViewMode('READ');
+    }
+  }, [userProfile, viewMode]);
 
   // Relógio em tempo real
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -192,6 +200,7 @@ export default function App() {
     localStorage.removeItem('relatorio_processo_active_user');
     setUserProfile(null);
     setCurrentUser(null);
+    setViewMode('READ');
     try {
       await signOut(auth);
     } catch (err) {
@@ -347,13 +356,19 @@ export default function App() {
         <span>Leitura</span>
       </button>
       <button
-        onClick={() => setViewMode('EDIT')}
+        onClick={() => {
+          if (!userProfile) {
+            setIsLoginModalOpen(true);
+            return;
+          }
+          setViewMode('EDIT');
+        }}
         className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
           viewMode === 'EDIT'
             ? 'bg-red-600 text-white hover:bg-red-600 hover:text-white shadow-sm'
             : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
         }`}
-        title="Preencher apontamentos do turno"
+        title={userProfile ? "Preencher apontamentos do turno" : "Identifique-se com usuário para preencher"}
       >
         <PenLine className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
         <span>Preencher</span>
@@ -753,9 +768,9 @@ export default function App() {
           <div className="p-8 text-center text-slate-500 text-xs">
             Nenhum dado encontrado para esta data.
           </div>
-        ) : viewMode === 'READ' ? (
+        ) : (
           <>
-            {/* Aviso com a DATA FILTRADA em destaque */}
+            {/* Aviso com a DATA FILTRADA e filtros em destaque (visível tanto no modo Leitura quanto no Preenchimento) */}
             {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL' || selectedMachineFilter !== 'ALL' || selectedDate !== getLocalDateString()) && (
               <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs animate-fade-in">
                 <div className="flex items-center gap-2 truncate">
@@ -765,7 +780,7 @@ export default function App() {
                       const [y, m, d] = selectedDate.split('-');
                       return `${d}/${m}/${y}`;
                     })()}</span>
-                    {selectedMachineFilter !== 'ALL' && ` • [${selectedMachineFilter}]`}
+                    {selectedMachineFilter !== 'ALL' && ` • Máquina: [${selectedMachineFilter}]`}
                     {searchQuery && ` • Busca: "${searchQuery}"`}
                     {filterOnlyWithNotes && ' • Com apontamento'}
                     {selectedShiftFilter !== 'ALL' && ` • ${selectedShiftFilter === 'shift1' ? '1º Turno' : selectedShiftFilter === 'shift2' ? '2º Turno' : '3º Turno'}`}
@@ -774,87 +789,103 @@ export default function App() {
                 <button
                   onClick={handleClearFilters}
                   className="text-xs font-bold text-red-400 hover:text-white cursor-pointer shrink-0 ml-2"
+                  title="Limpar todos os filtros e voltar para a data de hoje"
                 >
-                  ✕ Limpar
+                  ✕ Limpar Filtros
                 </button>
               </div>
             )}
 
-            <MachineMatrixView
-              report={report}
-              machinesList={allMachines}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              onlyWithNotes={filterOnlyWithNotes}
-              onToggleOnlyWithNotes={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
-              selectedShiftFilter={selectedShiftFilter}
-              onShiftFilterChange={setSelectedShiftFilter}
-              selectedMachineFilter={selectedMachineFilter}
-              onMachineFilterChange={setSelectedMachineFilter}
-              onOpenMenu={() => setIsMenuOpen(true)}
-              onOpenEditShift={(sk) => {
-                setActiveShift(sk);
-                setViewMode('EDIT');
-              }}
-            />
-          </>
-        ) : (
-          <>
-            {/* ── APONTAMENTOS DAS MÁQUINAS / CÉLULAS ── */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-3 sm:space-y-4">
-              {/* Barra de Filtro das Máquinas e Busca Global em Todos os Relatórios */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-2.5 border-b border-slate-800">
-                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                  {/* Filtro das Máquinas */}
-                  <select
-                    value={selectedMachineFilter}
-                    onChange={(e) => setSelectedMachineFilter(e.target.value)}
-                    className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
-                    title="Filtrar máquina específica"
-                  >
-                    <option value="ALL">Todas as Máquinas</option>
-                    {allMachines.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
+            {viewMode === 'READ' ? (
+              <MachineMatrixView
+                report={report}
+                machinesList={allMachines}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onlyWithNotes={filterOnlyWithNotes}
+                onToggleOnlyWithNotes={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
+                selectedShiftFilter={selectedShiftFilter}
+                onShiftFilterChange={setSelectedShiftFilter}
+                selectedMachineFilter={selectedMachineFilter}
+                onMachineFilterChange={setSelectedMachineFilter}
+                onOpenMenu={() => setIsMenuOpen(true)}
+                onClearFilters={handleClearFilters}
+                onOpenEditShift={(sk) => {
+                  if (!userProfile) {
+                    setIsLoginModalOpen(true);
+                    return;
+                  }
+                  setActiveShift(sk);
+                  setViewMode('EDIT');
+                }}
+              />
+            ) : (
+              /* ── APONTAMENTOS DAS MÁQUINAS / CÉLULAS ── */
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+                {/* Barra de Filtro das Máquinas e Busca Global em Todos os Relatórios */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-2.5 border-b border-slate-800">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    {/* Filtro das Máquinas */}
+                    <select
+                      value={selectedMachineFilter}
+                      onChange={(e) => setSelectedMachineFilter(e.target.value)}
+                      className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                      title="Filtrar máquina específica"
+                    >
+                      <option value="ALL">Todas as Máquinas</option>
+                      {allMachines.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
 
-                  {/* Barra de Pesquisa Global em Todos os Relatórios e Datas */}
-                  <div className="relative flex-1 sm:flex-initial w-full sm:w-64">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Buscar em todos os relatórios..."
-                      className="w-full px-2.5 py-1.5 pl-8 pr-7 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-                    />
-                    <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
-                    {searchQuery && (
+                    {/* Barra de Pesquisa Global em Todos os Relatórios e Datas */}
+                    <div className="relative flex-1 sm:flex-initial w-full sm:w-64">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar em todos os relatórios..."
+                        className="w-full px-2.5 py-1.5 pl-8 pr-7 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                      />
+                      <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+                      {searchQuery && (
+                        <button
+                          onClick={() => {
+                            setSearchQuery('');
+                            setHasSearchedGlobal(false);
+                            setGlobalSearchResults([]);
+                          }}
+                          className="absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Ver apenas com apontamento */}
+                    <button
+                      onClick={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
+                        filterOnlyWithNotes
+                          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                          : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Apenas com Apontamento</span>
+                    </button>
+
+                    {/* Botão Limpar Filtros no Modo Preenchimento */}
+                    {(selectedMachineFilter !== 'ALL' || searchQuery.trim() || filterOnlyWithNotes || selectedDate !== getLocalDateString()) && (
                       <button
-                        onClick={() => {
-                          setSearchQuery('');
-                          setHasSearchedGlobal(false);
-                          setGlobalSearchResults([]);
-                        }}
-                        className="absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs cursor-pointer"
+                        onClick={handleClearFilters}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 text-xs font-bold cursor-pointer transition-colors shrink-0"
+                        title="Limpar todos os filtros e voltar para a data de hoje"
                       >
-                        ✕
+                        <span>✕ Limpar Filtros</span>
                       </button>
                     )}
                   </div>
-
-                  {/* Ver apenas com apontamento */}
-                  <button
-                    onClick={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
-                      filterOnlyWithNotes
-                        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                        : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
-                    }`}
-                  >
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>Apenas com Apontamento</span>
-                  </button>
-                </div>
 
                 {/* Botão Salvar no canto direito (na mesma direção do apenas com apontamento) */}
                 {viewMode === 'EDIT' && (
@@ -983,9 +1014,10 @@ export default function App() {
                 })}
               </div>
             </div>
-          </>
-        )}
-      </main>
+          )}
+        </>
+      )}
+    </main>
 
       {/* ── MODAIS ── */}
       <PasswordUnlockModal
