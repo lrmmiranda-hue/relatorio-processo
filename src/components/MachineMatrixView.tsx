@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { DailyProcessReport } from '../types';
-import { Search, FileText, CheckCircle2, AlertTriangle, Wrench } from 'lucide-react';
+import { Search, FileText } from 'lucide-react';
 
 interface MachineMatrixViewProps {
   report: DailyProcessReport;
@@ -52,6 +52,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
   const weekdayName = weekdays[dateObj.getDay()];
 
   // Filtra as máquinas a serem exibidas
+  // Filtra as máquinas a serem exibidas
   const displayedMachines = useMemo(() => {
     return machinesList.filter((m) => {
       if (selectedMachineFilter && selectedMachineFilter !== 'ALL' && m !== selectedMachineFilter) return false;
@@ -59,9 +60,14 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
       if (!matchSearch) return false;
 
       if (onlyWithNotes) {
-        const hasT1 = Boolean(report.shifts?.shift1?.machines?.[m]?.trim());
-        const hasT2 = Boolean(report.shifts?.shift2?.machines?.[m]?.trim());
-        const hasT3 = Boolean(report.shifts?.shift3?.machines?.[m]?.trim());
+        const isRealNote = (v?: string) => {
+          const t = (v || '').trim();
+          return Boolean(t && t.toUpperCase() !== 'OK');
+        };
+
+        const hasT1 = isRealNote(report.shifts?.shift1?.machines?.[m]);
+        const hasT2 = isRealNote(report.shifts?.shift2?.machines?.[m]);
+        const hasT3 = isRealNote(report.shifts?.shift3?.machines?.[m]);
 
         if (selectedShiftFilter === 'shift1') return hasT1;
         if (selectedShiftFilter === 'shift2') return hasT2;
@@ -83,37 +89,10 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
       );
     }
 
-    if (trimmed === 'OK') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 print:bg-gray-100 print:text-black print:border-gray-400">
-          <CheckCircle2 className="w-3 h-3 text-emerald-400 print:text-black shrink-0" />
-          <span>OK</span>
-        </span>
-      );
-    }
-
-    if (trimmed === 'Sem Bruto') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 print:bg-gray-100 print:text-black print:border-gray-400">
-          <AlertTriangle className="w-3 h-3 text-amber-400 print:text-black shrink-0" />
-          <span>Sem Bruto</span>
-        </span>
-      );
-    }
-
-    if (trimmed === 'Manutenção') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-red-500/15 text-red-300 border border-red-500/30 print:bg-gray-100 print:text-black print:border-gray-400">
-          <Wrench className="w-3 h-3 text-red-400 print:text-black shrink-0" />
-          <span>Manutenção</span>
-        </span>
-      );
-    }
-
     return (
       <div 
         onClick={() => onOpenEditShift && onOpenEditShift(shiftKey)}
-        className="font-sans text-xs whitespace-pre-wrap break-words text-slate-200 print:text-black font-normal leading-relaxed"
+        className="font-sans text-xs whitespace-pre-wrap break-words text-slate-200 print:text-black font-normal leading-relaxed cursor-pointer"
         title="Clique para abrir edição deste turno"
       >
         {trimmed}

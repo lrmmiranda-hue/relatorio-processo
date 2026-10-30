@@ -264,7 +264,7 @@ export default function App() {
       if (!matchSearch) return false;
       if (filterOnlyWithNotes) {
         const val = report?.shifts?.[activeShift]?.machines?.[m]?.trim();
-        return Boolean(val);
+        return Boolean(val && val.toUpperCase() !== 'OK');
       }
       return true;
     });
@@ -476,8 +476,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* MODO COMPUTADOR: Leitura/Preencher, Data e Turnos NA PARTE DE CIMA */}
-            <div className="hidden sm:flex items-center gap-2 flex-nowrap shrink-0">
+            {/* MODO COMPUTADOR: Leitura/Preencher, Data e Turnos NA PARTE DE CIMA (COM MAIOR ESPAÇAMENTO) */}
+            <div className="hidden sm:flex items-center gap-6 lg:gap-8 flex-nowrap shrink-0">
               {renderModeSelector()}
               {renderDateSelector()}
               {renderShiftSelector(false)}
