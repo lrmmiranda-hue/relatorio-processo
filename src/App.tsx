@@ -324,125 +324,130 @@ export default function App() {
 
   const currentShiftData = report?.shifts?.[activeShift] || getEmptyShift();
 
-  // Controles de Modo (Leitura/Preencher), Data e Turnos
-  const renderHeaderControls = () => (
-    <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar flex-nowrap shrink-0">
-      {/* Seletor de Modo: Leitura vs Preenchimento */}
-      <div className="flex items-center p-0.5 bg-slate-950 border border-slate-800 rounded-xl shrink-0">
-        <button
-          onClick={() => setViewMode('READ')}
-          className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
-            viewMode === 'READ'
-              ? 'bg-cyan-500 text-slate-950 shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900'
-          }`}
-          title="Visualizar matriz de todas as máquinas nos 3 turnos"
-        >
-          <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          <span>Leitura</span>
-        </button>
-        <button
-          onClick={() => setViewMode('EDIT')}
-          className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
-            viewMode === 'EDIT'
-              ? 'bg-cyan-500 text-slate-950 shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900'
-          }`}
-          title="Preencher apontamentos do turno"
-        >
-          <PenLine className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          <span>Preencher</span>
-        </button>
+  // Seletor de Modo: Leitura vs Preenchimento
+  const renderModeSelector = () => (
+    <div className="flex items-center p-0.5 bg-slate-950 border border-slate-800 rounded-xl shrink-0">
+      <button
+        onClick={() => setViewMode('READ')}
+        className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+          viewMode === 'READ'
+            ? 'bg-cyan-500 text-slate-950 shadow-sm'
+            : 'text-slate-400 hover:text-white hover:bg-slate-900'
+        }`}
+        title="Visualizar matriz de todas as máquinas nos 3 turnos"
+      >
+        <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+        <span>Leitura</span>
+      </button>
+      <button
+        onClick={() => setViewMode('EDIT')}
+        className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+          viewMode === 'EDIT'
+            ? 'bg-cyan-500 text-slate-950 shadow-sm'
+            : 'text-slate-400 hover:text-white hover:bg-slate-900'
+        }`}
+        title="Preencher apontamentos do turno"
+      >
+        <PenLine className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+        <span>Preencher</span>
+      </button>
+    </div>
+  );
+
+  // Navegação de Data - Colocada DIRETAMENTE NA FRENTE DO PREENCHER
+  const renderDateSelector = () => (
+    <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-xl border border-slate-800 shrink-0">
+      <button
+        onClick={() => handleShiftDate(-1)}
+        className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+        title="Dia anterior"
+      >
+        <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+      </button>
+
+      <div className="flex items-center px-1 text-cyan-300 font-mono font-bold text-[11px] sm:text-xs">
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
+        />
       </div>
 
-      {/* Navegação de Data - Colocada DIRETAMENTE NA FRENTE DO PREENCHER */}
-      <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-xl border border-slate-800 shrink-0">
+      <button
+        onClick={() => handleShiftDate(1)}
+        className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
+        title="Próximo dia"
+      >
+        <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+      </button>
+
+      {selectedDate !== getLocalDateString() && (
         <button
-          onClick={() => handleShiftDate(-1)}
-          className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
-          title="Dia anterior"
+          onClick={() => setSelectedDate(getLocalDateString())}
+          className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer"
+          title="Voltar para Hoje"
         >
-          <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          Hoje
         </button>
+      )}
+    </div>
+  );
 
-        <div className="flex items-center px-1 text-cyan-300 font-mono font-bold text-[11px] sm:text-xs">
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
-          />
-        </div>
+  // Seletor dos 3 Turnos: Suporta modo compacto ou largura total (para celular)
+  const renderShiftSelector = (isFullWidth = false) => (
+    <div className={`p-0.5 bg-slate-950 border border-slate-800 rounded-xl shrink-0 ${
+      isFullWidth ? 'grid grid-cols-3 gap-1 w-full' : 'flex items-center gap-1 overflow-x-auto'
+    }`}>
+      {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
+        const cfg = SHIFTS_CONFIG[sk];
+        const isSelected = activeShift === sk;
+        const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
+        const isUnlocked = unlockedShifts[sk];
+        const shiftLabels: Record<ShiftKey, string> = {
+          shift1: '1º Turno',
+          shift2: '2º Turno',
+          shift3: '3º Turno'
+        };
 
-        <button
-          onClick={() => handleShiftDate(1)}
-          className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
-          title="Próximo dia"
-        >
-          <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-        </button>
-
-        {selectedDate !== getLocalDateString() && (
+        return (
           <button
-            onClick={() => setSelectedDate(getLocalDateString())}
-            className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer"
-            title="Voltar para Hoje"
+            key={sk}
+            onClick={() => {
+              setActiveShift(sk);
+              if (viewMode === 'READ') {
+                setSelectedShiftFilter(sk);
+              }
+            }}
+            title={`${cfg.name} (${cfg.startTime} - ${cfg.endTime})`}
+            className={`flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+              isFullWidth ? 'w-full' : ''
+            } ${
+              isSelected
+                ? 'bg-slate-800 text-cyan-300 shadow-sm border border-slate-700'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+            }`}
           >
-            Hoje
+            <span>{shiftLabels[sk]}</span>
+
+            {/* Indicador de Status do Turno */}
+            {isNow ? (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"
+                title="Turno em andamento no momento"
+              />
+            ) : isAdmin || isUnlocked ? (
+              <span title="Edição liberada pelo administrador" className="shrink-0">
+                <Unlock className="w-2.5 h-2.5 text-cyan-400" />
+              </span>
+            ) : (
+              <span title="Fora do horário do turno" className="shrink-0">
+                <Lock className="w-2.5 h-2.5 text-slate-500" />
+              </span>
+            )}
           </button>
-        )}
-      </div>
-
-      {/* Seletor dos 3 Turnos: Colocado DIRETAMENTE DO LADO DA DATA */}
-      <div className="flex items-center gap-1 p-0.5 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto shrink-0">
-        {(['shift1', 'shift2', 'shift3'] as const).map((sk) => {
-          const cfg = SHIFTS_CONFIG[sk];
-          const isSelected = activeShift === sk;
-          const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
-          const isUnlocked = unlockedShifts[sk];
-          const shiftLabels: Record<ShiftKey, string> = {
-            shift1: '1º Turno',
-            shift2: '2º Turno',
-            shift3: '3º Turno'
-          };
-
-          return (
-            <button
-              key={sk}
-              onClick={() => {
-                setActiveShift(sk);
-                if (viewMode === 'READ') {
-                  setSelectedShiftFilter(sk);
-                }
-              }}
-              title={`${cfg.name} (${cfg.startTime} - ${cfg.endTime})`}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                isSelected
-                  ? 'bg-slate-800 text-cyan-300 shadow-sm border border-slate-700'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-              }`}
-            >
-              <span>{shiftLabels[sk]}</span>
-
-              {/* Indicador de Status do Turno */}
-              {isNow ? (
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"
-                  title="Turno em andamento no momento"
-                />
-              ) : isAdmin || isUnlocked ? (
-                <span title="Edição liberada pelo administrador" className="shrink-0">
-                  <Unlock className="w-2.5 h-2.5 text-cyan-400" />
-                </span>
-              ) : (
-                <span title="Fora do horário do turno" className="shrink-0">
-                  <Lock className="w-2.5 h-2.5 text-slate-500" />
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+        );
+      })}
     </div>
   );
 
@@ -451,7 +456,7 @@ export default function App() {
       {/* ── TOPO DA APLICAÇÃO (ULTRA COMPACTO PARA CELULAR E DESKTOP) ── */}
       <header className="no-print bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-2.5 py-1.5 sm:px-4 sm:py-2">
         <div className="max-w-7xl mx-auto flex flex-col gap-1.5">
-          {/* LINHA SUPERIOR: Logo ATMS (canto esquerdo), Controles no modo PC (centro), Salvar e Menu/Login (canto direito) */}
+          {/* LINHA SUPERIOR: Logo ATMS (canto esquerdo), Controles no modo PC (centro), Tema/Login (PC) e Menu (Celular) */}
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Canto Esquerdo: Logo ATMS do sistema */}
             <div className="flex items-center gap-2 min-w-0 shrink-0">
@@ -472,16 +477,18 @@ export default function App() {
             </div>
 
             {/* MODO COMPUTADOR: Leitura/Preencher, Data e Turnos NA PARTE DE CIMA */}
-            <div className="hidden sm:flex items-center shrink-0">
-              {renderHeaderControls()}
+            <div className="hidden sm:flex items-center gap-2 flex-nowrap shrink-0">
+              {renderModeSelector()}
+              {renderDateSelector()}
+              {renderShiftSelector(false)}
             </div>
 
-            {/* Canto Superior Direito: Alternar Tema (sem fundo) e Login Circular */}
+            {/* Canto Superior Direito: Alternar Tema (sem fundo) e Login Circular (Apenas PC; no celular já tem no menu) */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* Alternar Modo Claro/Escuro: Sem fundo, apenas o ícone */}
+              {/* Alternar Modo Claro/Escuro: Apenas no modo PC */}
               <button
                 onClick={toggleTheme}
-                className="p-1.5 text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center rounded-lg"
+                className="hidden sm:flex p-1.5 text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 transition-colors cursor-pointer items-center justify-center rounded-lg"
                 title={theme === 'dark' ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
               >
                 {theme === 'dark' ? (
@@ -491,8 +498,8 @@ export default function App() {
                 )}
               </button>
 
-              {/* Login em Formato Círculo com a Inicial do Usuário */}
-              <div className="relative">
+              {/* Login em Formato Círculo com a Inicial do Usuário: Apenas no modo PC */}
+              <div className="hidden sm:block relative">
                 {userProfile ? (
                   <>
                     <button
@@ -550,7 +557,7 @@ export default function App() {
                 )}
               </div>
 
-              {/* MODO CELULAR: Apenas no mobile exibe o botão Menu */}
+              {/* MODO CELULAR: Apenas o botão Menu (Tema e Login já estão dentro do menu) */}
               <button
                 onClick={() => setIsMenuOpen(true)}
                 className="sm:hidden relative p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-cyan-400 border border-slate-700 transition-colors cursor-pointer shadow-sm flex items-center gap-1"
@@ -564,9 +571,18 @@ export default function App() {
             </div>
           </div>
 
-          {/* LINHA INFERIOR: Apenas no Modo Celular (no computador fica na parte de cima) */}
-          <div className="sm:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t border-slate-800/60 flex-nowrap">
-            {renderHeaderControls()}
+          {/* LINHA INFERIOR: Apenas no Modo Celular - Mais organizado e com turnos na largura da tela */}
+          <div className="sm:hidden flex flex-col gap-1.5 pt-1.5 border-t border-slate-800/60">
+            {/* Linha 1 no celular: Leitura/Preencher e Data na frente do Preencher */}
+            <div className="flex items-center justify-between gap-1 w-full">
+              {renderModeSelector()}
+              {renderDateSelector()}
+            </div>
+
+            {/* Linha 2 no celular: Os 3 Turnos embaixo ocupando toda a largura da tela */}
+            <div className="w-full">
+              {renderShiftSelector(true)}
+            </div>
           </div>
         </div>
       </header>
@@ -768,13 +784,13 @@ export default function App() {
             {/* ── APONTAMENTOS DAS MÁQUINAS / CÉLULAS ── */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-3 sm:space-y-4">
               {/* Barra de Filtro das Máquinas e Busca Global em Todos os Relatórios */}
-              <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-800">
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-2.5 border-b border-slate-800">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                   {/* Filtro das Máquinas */}
                   <select
                     value={selectedMachineFilter}
                     onChange={(e) => setSelectedMachineFilter(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                    className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
                     title="Filtrar máquina específica"
                   >
                     <option value="ALL">Todas as Máquinas</option>
@@ -784,13 +800,13 @@ export default function App() {
                   </select>
 
                   {/* Barra de Pesquisa Global em Todos os Relatórios e Datas */}
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-initial w-full sm:w-64">
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Buscar em todos os relatórios e datas..."
-                      className="px-2.5 py-1.5 pl-8 pr-7 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-48 sm:w-72"
+                      placeholder="Buscar em todos os relatórios..."
+                      className="w-full px-2.5 py-1.5 pl-8 pr-7 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                     />
                     <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
                     {searchQuery && (
@@ -810,7 +826,7 @@ export default function App() {
                   {/* Ver apenas com apontamento */}
                   <button
                     onClick={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
                       filterOnlyWithNotes
                         ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
                         : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
@@ -821,12 +837,12 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Botão Salvar no canto direito, na mesma direção do Apenas com Apontamento */}
+                {/* Botão Salvar no canto direito (na mesma direção do apenas com apontamento) */}
                 {viewMode === 'EDIT' && (
                   <button
                     onClick={handleSaveReport}
                     disabled={!canEdit || loading || saving}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
+                    className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
                       saveSuccess
                         ? 'bg-emerald-500 text-white shadow-emerald-500/20'
                         : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
