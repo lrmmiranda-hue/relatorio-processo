@@ -177,7 +177,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         <div className="sm:hidden flex items-center justify-between px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px]">
           <div className="flex items-center gap-1.5 truncate text-slate-300">
             {(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL') ? (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold truncate">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-semibold truncate">
                 Filtros Ativos
               </span>
             ) : (
@@ -192,7 +192,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                   if (onlyWithNotes && toggleExternalOnlyNotes) toggleExternalOnlyNotes();
                   if (setExternalShiftFilter) setExternalShiftFilter('ALL');
                 }}
-                className="text-[10px] text-cyan-400 hover:text-white font-bold cursor-pointer"
+                className="text-[10px] text-red-400 hover:text-white font-bold cursor-pointer"
               >
                 ✕ Limpar
               </button>
@@ -200,7 +200,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
             {onOpenMenu && (
               <button
                 onClick={onOpenMenu}
-                className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold border border-slate-700 cursor-pointer"
+                className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-red-400 font-bold border border-slate-700 cursor-pointer"
               >
                 Filtros no Menu
               </button>
@@ -218,7 +218,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar célula..."
-                className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-44"
+                className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 w-44"
               />
               <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
             </div>
@@ -228,7 +228,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
               <select
                 value={selectedMachineFilter || 'ALL'}
                 onChange={(e) => onMachineFilterChange(e.target.value)}
-                className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-cyan-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-red-400 focus:outline-none focus:border-red-500 cursor-pointer"
                 title="Filtrar máquina específica"
               >
                 <option value="ALL">Todas as Máquinas</option>
@@ -242,7 +242,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
             <select
               value={selectedShiftFilter}
               onChange={(e) => setSelectedShiftFilter(e.target.value as any)}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-300 focus:outline-none focus:border-red-500 cursor-pointer"
             >
               <option value="ALL">Todos os Turnos</option>
               <option value="shift1">1º Turno</option>
@@ -255,7 +255,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
               onClick={() => setOnlyWithNotes()}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
                 onlyWithNotes
-                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
+                  ? 'bg-red-500/15 text-red-400 border-red-500/40'
                   : 'bg-slate-950 text-slate-400 border-slate-700 hover:text-white'
               }`}
             >

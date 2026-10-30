@@ -331,7 +331,7 @@ export default function App() {
         onClick={() => setViewMode('READ')}
         className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
           viewMode === 'READ'
-            ? 'bg-cyan-500 text-slate-950 shadow-sm'
+            ? 'bg-red-600 text-white shadow-sm'
             : 'text-slate-400 hover:text-white hover:bg-slate-900'
         }`}
         title="Visualizar matriz de todas as máquinas nos 3 turnos"
@@ -343,7 +343,7 @@ export default function App() {
         onClick={() => setViewMode('EDIT')}
         className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
           viewMode === 'EDIT'
-            ? 'bg-cyan-500 text-slate-950 shadow-sm'
+            ? 'bg-red-600 text-white shadow-sm'
             : 'text-slate-400 hover:text-white hover:bg-slate-900'
         }`}
         title="Preencher apontamentos do turno"
@@ -365,12 +365,12 @@ export default function App() {
         <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
       </button>
 
-      <div className="flex items-center px-1 text-cyan-300 font-mono font-bold text-[11px] sm:text-xs">
+      <div className="flex items-center px-1 text-red-400 font-mono font-bold text-[11px] sm:text-xs">
         <input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-mono text-cyan-300 focus:outline-none cursor-pointer border-none"
+          className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-mono text-red-400 focus:outline-none cursor-pointer border-none"
         />
       </div>
 
@@ -385,7 +385,7 @@ export default function App() {
       {selectedDate !== getLocalDateString() && (
         <button
           onClick={() => setSelectedDate(getLocalDateString())}
-          className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors cursor-pointer"
+          className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
           title="Voltar para Hoje"
         >
           Hoje
@@ -424,7 +424,7 @@ export default function App() {
               isFullWidth ? 'w-full' : ''
             } ${
               isSelected
-                ? 'bg-slate-800 text-cyan-300 shadow-sm border border-slate-700'
+                ? 'bg-slate-800 text-red-400 shadow-sm border border-slate-700'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
             }`}
           >
@@ -438,7 +438,7 @@ export default function App() {
               />
             ) : isAdmin || isUnlocked ? (
               <span title="Edição liberada pelo administrador" className="shrink-0">
-                <Unlock className="w-2.5 h-2.5 text-cyan-400" />
+                <Unlock className="w-2.5 h-2.5 text-red-400" />
               </span>
             ) : (
               <span title="Fora do horário do turno" className="shrink-0">
@@ -452,7 +452,7 @@ export default function App() {
   );
 
   return (
-    <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-white ${theme}`}>
+    <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-red-600 selection:text-white ${theme}`}>
       {/* ── TOPO DA APLICAÇÃO (ULTRA COMPACTO PARA CELULAR E DESKTOP) ── */}
       <header className="no-print bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-2.5 py-1.5 sm:px-4 sm:py-2">
         <div className="max-w-7xl mx-auto flex flex-col gap-1.5">
@@ -469,7 +469,7 @@ export default function App() {
                   <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-500 shrink-0" />
                   <span>{currentTime.toLocaleTimeString()}</span>
                   <span>•</span>
-                  <span className="font-semibold text-cyan-400">
+                  <span className="font-semibold text-red-500">
                     {SHIFTS_CONFIG[getCurrentActiveShift(currentTime)].name}
                   </span>
                 </div>
@@ -494,7 +494,7 @@ export default function App() {
                 {theme === 'dark' ? (
                   <Sun className="w-4 h-4 text-amber-400 hover:scale-110 transition-transform" />
                 ) : (
-                  <Moon className="w-4 h-4 text-cyan-400 hover:scale-110 transition-transform" />
+                  <Moon className="w-4 h-4 text-slate-400 hover:text-red-500 hover:scale-110 transition-transform" />
                 )}
               </button>
 
@@ -504,7 +504,7 @@ export default function App() {
                   <>
                     <button
                       onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                      className="w-8 h-8 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs flex items-center justify-center uppercase cursor-pointer ring-2 ring-transparent hover:ring-cyan-300 transition-all select-none shadow-sm"
+                      className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center justify-center uppercase cursor-pointer ring-2 ring-transparent hover:ring-red-400 transition-all select-none shadow-sm"
                       title={`Usuário: ${userProfile.username || userProfile.name} - Clique para opções`}
                     >
                       {(userProfile.username || userProfile.name || 'U').charAt(0).toUpperCase()}
@@ -527,7 +527,7 @@ export default function App() {
                             >
                               {userProfile.username || userProfile.name}
                             </div>
-                            <div className="text-[10px] text-cyan-400 font-mono font-semibold">
+                            <div className="text-[10px] text-red-400 font-mono font-semibold">
                               {isAdmin ? 'ADMINISTRADOR' : 'OPERADOR'}
                             </div>
                           </div>
@@ -549,7 +549,7 @@ export default function App() {
                 ) : (
                   <button
                     onClick={() => setIsLoginModalOpen(true)}
-                    className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 flex items-center justify-center cursor-pointer transition-all shadow-sm"
+                    className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-red-400 border border-slate-700 flex items-center justify-center cursor-pointer transition-all shadow-sm"
                     title="Entrar com Usuário ou Administrador"
                   >
                     <UserIcon className="w-4 h-4" />
@@ -560,12 +560,12 @@ export default function App() {
               {/* MODO CELULAR: Apenas o botão Menu (Tema e Login já estão dentro do menu) */}
               <button
                 onClick={() => setIsMenuOpen(true)}
-                className="sm:hidden relative p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-cyan-400 border border-slate-700 transition-colors cursor-pointer shadow-sm flex items-center gap-1"
+                className="sm:hidden relative p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-red-400 border border-slate-700 transition-colors cursor-pointer shadow-sm flex items-center gap-1"
                 title="Abrir Menu (Filtros, Modo Claro, Deslogar)"
               >
-                <Menu className="w-4 h-4 text-cyan-400" />
+                <Menu className="w-4 h-4 text-slate-200" />
                 {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL' || selectedMachineFilter !== 'ALL') && (
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse absolute -top-0.5 -right-0.5" />
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse absolute -top-0.5 -right-0.5" />
                 )}
               </button>
             </div>
@@ -591,9 +591,9 @@ export default function App() {
       {viewMode === 'EDIT' && (
         <div className="no-print max-w-7xl mx-auto w-full px-4 pt-4">
           {isAdmin ? (
-            <div className="flex items-center justify-between p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-red-500 shrink-0" />
                 <span>
                   <strong>Acesso Administrativo:</strong> Você possui liberação irrestrita para editar e auditar qualquer turno e data.
                 </span>
