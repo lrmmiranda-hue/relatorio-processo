@@ -1,23 +1,64 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
+import { 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager,
+  memoryLocalCache,
+  doc, 
+  getDoc, 
+  setDoc, 
+  deleteDoc, 
+  collection, 
+  getDocs 
+} from 'firebase/firestore';
 import firebaseConfig from './firebase-applet-config.json';
 import type { DailyProcessReport, UserProfile } from './types';
 import { INITIAL_MACHINE_PARTS } from './constants/machines';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Otimização de Performance & Custos:
+// No navegador: ativa cache local permanente em IndexedDB e sincronização compartilhada entre abas (evita baixar dados repetidos no F5).
+const isBrowser = typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined';
+
+export const db = initializeFirestore(
+  app,
+  {
+    localCache: isBrowser
+      ? persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+      : memoryLocalCache()
+  },
+  firebaseConfig.firestoreDatabaseId
+);
+
+// Cache inteligente em memória para evitar leituras repetidas ao alternar datas
+let cachedDailyReportsSnap: { timestamp: number; docs: { id: string; data: DailyProcessReport }[] } | null = null;
+
+export function invalidateDailyReportsCache() {
+  cachedDailyReportsSnap = null;
+}
 
 // Obtém as peças herdadas para a data (a partir do dia 26/10/2026, mantendo o dia anterior até alteração)
 export async function getInheritedMachineParts(targetDate: string): Promise<Record<string, string>> {
   const partsAccumulator: Record<string, string> = { ...INITIAL_MACHINE_PARTS };
 
   try {
-    const snap = await getDocs(collection(db, 'daily_reports'));
+    const now = Date.now();
+    let docsList: { id: string; data: DailyProcessReport }[] = [];
+
+    // Reutiliza cache em memória por até 2 minutos se não houver nova gravação
+    if (cachedDailyReportsSnap && (now - cachedDailyReportsSnap.timestamp < 120000)) {
+      docsList = cachedDailyReportsSnap.docs;
+    } else {
+      const snap = await getDocs(collection(db, 'daily_reports'));
+      docsList = snap.docs.map(d => ({ id: d.id, data: d.data() as DailyProcessReport }));
+      cachedDailyReportsSnap = { timestamp: now, docs: docsList };
+    }
+
     // Ordena as datas anteriores ou iguais a targetDate em ordem cronológica crescente
-    const sortedDocs = snap.docs
-      .map(d => ({ id: d.id, data: d.data() as DailyProcessReport }))
+    const sortedDocs = docsList
       .filter(d => d.id <= targetDate && d.id >= '2026-10-26')
       .sort((a, b) => a.id.localeCompare(b.id));
 
@@ -70,6 +111,7 @@ export async function saveDailyReportFirebase(report: DailyProcessReport): Promi
     const cleanData = JSON.parse(JSON.stringify(report));
     cleanData.updatedAt = Date.now();
     await setDoc(docRef, cleanData, { merge: true });
+    invalidateDailyReportsCache();
   } catch (err) {
     console.error('Erro ao salvar relatório:', err);
     throw err;
@@ -81,6 +123,7 @@ export async function deleteDailyReportFirebase(reportId: string): Promise<void>
   try {
     const docRef = doc(db, 'daily_reports', reportId);
     await deleteDoc(docRef);
+    invalidateDailyReportsCache();
   } catch (err) {
     console.error('Erro ao excluir relatório:', err);
     throw err;
