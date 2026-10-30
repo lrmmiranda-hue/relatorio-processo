@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { DailyProcessReport } from '../types';
-import { Search, FileText } from 'lucide-react';
+import { Search, FileText, Printer } from 'lucide-react';
+import { INITIAL_MACHINE_PARTS } from '../constants/machines';
 
 interface MachineMatrixViewProps {
   report: DailyProcessReport;
@@ -52,6 +53,23 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
   const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
   const weekdayName = weekdays[dateObj.getDay()];
 
+  // Obtém a peça da máquina (específica do turno filtrado, mais recente do dia ou herdada da linha de base)
+  const getMachinePart = (machine: string, shiftKey?: 'shift1' | 'shift2' | 'shift3') => {
+    if (shiftKey && report.shifts?.[shiftKey]?.machineParts?.[machine]) {
+      return report.shifts[shiftKey].machineParts![machine];
+    }
+    if (report.machineParts?.[machine]) {
+      return report.machineParts[machine];
+    }
+    return (
+      report.shifts?.shift3?.machineParts?.[machine] ||
+      report.shifts?.shift2?.machineParts?.[machine] ||
+      report.shifts?.shift1?.machineParts?.[machine] ||
+      INITIAL_MACHINE_PARTS[machine] ||
+      ''
+    );
+  };
+
   // Filtra as máquinas a serem exibidas
   const displayedMachines = useMemo(() => {
     return machinesList.filter((m) => {
@@ -60,11 +78,13 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
       const q = searchQuery.trim().toLowerCase();
       if (q) {
         const matchName = m.toLowerCase().includes(q);
+        const part = getMachinePart(m).toLowerCase();
+        const matchPart = part.includes(q);
         const t1 = (report.shifts?.shift1?.machines?.[m] || '').toLowerCase();
         const t2 = (report.shifts?.shift2?.machines?.[m] || '').toLowerCase();
         const t3 = (report.shifts?.shift3?.machines?.[m] || '').toLowerCase();
         const matchNotes = t1.includes(q) || t2.includes(q) || t3.includes(q);
-        if (!matchName && !matchNotes) return false;
+        if (!matchName && !matchNotes && !matchPart) return false;
       }
 
       if (onlyWithNotes) {
@@ -91,7 +111,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
     const trimmed = (val || '').trim();
     if (!trimmed) {
       return (
-        <span className="text-slate-600 print:text-gray-400 select-none block text-center">
+        <span className="text-slate-600 print:text-gray-400 select-none block text-center text-xs">
           —
         </span>
       );
@@ -100,22 +120,22 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
     return (
       <div 
         onClick={() => onOpenEditShift && onOpenEditShift(shiftKey)}
-        className="font-sans text-xs whitespace-pre-wrap break-words text-slate-200 print:text-black font-normal leading-relaxed cursor-pointer"
+        className="font-sans text-[11px] whitespace-pre-wrap break-words text-slate-200 print:text-black font-normal leading-tight cursor-pointer uppercase"
         title="Clique para abrir edição deste turno"
       >
-        {trimmed}
+        {trimmed.toUpperCase()}
       </div>
     );
   };
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Estilos específicos para Impressão A4 Paisagem */}
+      {/* Estilos específicos para Impressão A4 Paisagem (Otimizado para caber em 1 página) */}
       <style>{`
         @media print {
           @page {
             size: A4 landscape !important;
-            margin: 6mm 8mm !important;
+            margin: 4mm 6mm !important;
           }
           html, body {
             margin: 0 !important;
@@ -140,6 +160,8 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
             padding: 0 !important;
             background: #ffffff !important;
             color: #000000 !important;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
@@ -157,8 +179,8 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
           }
           .print-compact-table th,
           .print-compact-table td {
-            padding: 4px 6px !important;
-            font-size: 8pt !important;
+            padding: 2.5px 4px !important;
+            font-size: 7.5pt !important;
             line-height: 1.15 !important;
             border: 1px solid #64748b !important;
             color: #000000 !important;
@@ -167,14 +189,16 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
           }
           .print-compact-table th:first-child,
           .print-compact-table td:first-child {
-            width: 16% !important;
+            width: 18% !important;
             font-weight: 800 !important;
+            text-align: left !important;
           }
           .print-compact-table th {
             background-color: #e2e8f0 !important;
             font-weight: 800 !important;
             color: #0f172a !important;
-            font-size: 8.5pt !important;
+            font-size: 8pt !important;
+            text-align: center !important;
           }
         }
       `}</style>
@@ -226,8 +250,8 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar célula..."
-                    className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 w-44"
+                    placeholder="Buscar célula ou peça..."
+                    className="px-2.5 py-1.5 pl-8 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 w-44 uppercase"
                   />
                   <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
                 </div>
@@ -284,6 +308,17 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                   </button>
                 )}
               </div>
+
+              {/* Botão Imprimir / Salvar PDF (Ajustado para 1 página) */}
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:border-slate-500 text-xs font-semibold cursor-pointer transition-all shadow-sm shrink-0 ml-auto"
+                title="Imprimir relatório ou Salvar como PDF formatado em 1 página A4"
+              >
+                <Printer className="w-3.5 h-3.5 text-red-400" />
+                <span>Imprimir / PDF</span>
+              </button>
             </div>
           </div>
         );
@@ -291,20 +326,20 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
 
       {/* ── TABELA MATRIZ DIÁRIA DE CÉLULAS X TURNOS (TELA + IMPRESSÃO) ── */}
       <div id="printable-matrix-report" className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        {/* Cabeçalho exclusivo para a impressão A4 */}
-        <div className="hidden print:block p-3 border-b-2 border-black mb-2">
+        {/* Cabeçalho exclusivo para a impressão A4 (Reduzido e compacto) */}
+        <div className="hidden print:block p-2 border-b border-black mb-1.5">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-base font-black uppercase tracking-wider text-black">
+              <h1 className="text-sm font-black uppercase tracking-wider text-black">
                 Relatório Diário de Processo & Células
               </h1>
-              <p className="text-[9pt] font-bold text-black mt-0.5">
+              <p className="text-[8pt] font-bold text-black mt-0.5">
                 Data: {formattedDate} ({weekdayName})
                 {selectedShiftFilter !== 'ALL' && ` • Filtro: ${selectedShiftFilter === 'shift1' ? '1º Turno' : selectedShiftFilter === 'shift2' ? '2º Turno' : '3º Turno'}`}
                 {onlyWithNotes && ' • Apenas com apontamentos'}
               </p>
             </div>
-            <div className="text-right text-[8pt] text-gray-700">
+            <div className="text-right text-[7.5pt] text-gray-700">
               Emitido em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}
             </div>
           </div>
@@ -314,13 +349,13 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse table-fixed print-compact-table">
             <thead>
-              <tr className="bg-slate-950 border-b border-slate-800 text-slate-300 font-bold uppercase tracking-wider text-sm print:bg-gray-200 print:text-black">
-                <th className="p-3 w-40 sm:w-48 shrink-0 font-bold text-white print:text-black text-sm uppercase tracking-wider">
-                  Célula / Máquina
+              <tr className="bg-slate-950 border-b border-slate-800 text-slate-300 font-bold uppercase tracking-wider text-xs print:bg-gray-200 print:text-black">
+                <th className="py-2 px-2.5 w-44 sm:w-52 shrink-0 font-bold text-white print:text-black text-xs uppercase tracking-wider">
+                  Célula / Peça
                 </th>
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift1') && (
                   <th 
-                    className="p-3 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-sm uppercase tracking-wider"
+                    className="py-2 px-2 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-xs uppercase tracking-wider text-center"
                     title="1º Turno (05:00 - 14:18)"
                   >
                     1º Turno
@@ -328,7 +363,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                 )}
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift2') && (
                   <th 
-                    className="p-3 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-sm uppercase tracking-wider"
+                    className="py-2 px-2 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-xs uppercase tracking-wider text-center"
                     title="2º Turno (14:18 - 23:25)"
                   >
                     2º Turno
@@ -336,7 +371,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                 )}
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift3') && (
                   <th 
-                    className="p-3 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-sm uppercase tracking-wider"
+                    className="py-2 px-2 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-xs uppercase tracking-wider text-center"
                     title="3º Turno (23:25 - 05:00)"
                   >
                     3º Turno
@@ -347,7 +382,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
             <tbody className="divide-y divide-slate-800/70 print:divide-gray-400">
               {displayedMachines.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-500 italic">
+                  <td colSpan={4} className="p-8 text-center text-slate-500 italic text-xs">
                     Nenhuma célula com dados para os filtros selecionados.
                   </td>
                 </tr>
@@ -364,24 +399,38 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                         idx % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-900/90'
                       } hover:bg-slate-800/60 print:bg-transparent`}
                     >
-                      <td className="p-2.5 sm:p-3 font-bold text-white print:text-black font-mono text-sm tracking-wide">
-                        {machine}
+                      {/* Célula e Peça no Modo Leitura */}
+                      <td className="py-1.5 px-2.5 font-mono print:text-black">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-white print:text-black text-xs tracking-wide">
+                            {machine}
+                          </span>
+                          {(() => {
+                            const part = getMachinePart(machine, selectedShiftFilter !== 'ALL' ? selectedShiftFilter : undefined);
+                            if (!part) return null;
+                            return (
+                              <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 print:text-black print:bg-transparent print:border-none print:p-0 font-mono font-bold text-[10px] w-fit">
+                                {part}
+                              </span>
+                            );
+                          })()}
+                        </div>
                       </td>
 
                       {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift1') && (
-                        <td className="p-2.5 sm:p-3 border-l border-slate-800 print:border-gray-400">
+                        <td className="py-1.5 px-2 border-l border-slate-800 print:border-gray-400">
                           {renderCellContent(t1, 'shift1')}
                         </td>
                       )}
 
                       {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift2') && (
-                        <td className="p-2.5 sm:p-3 border-l border-slate-800 print:border-gray-400">
+                        <td className="py-1.5 px-2 border-l border-slate-800 print:border-gray-400">
                           {renderCellContent(t2, 'shift2')}
                         </td>
                       )}
 
                       {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift3') && (
-                        <td className="p-2.5 sm:p-3 border-l border-slate-800 print:border-gray-400">
+                        <td className="py-1.5 px-2 border-l border-slate-800 print:border-gray-400">
                           {renderCellContent(t3, 'shift3')}
                         </td>
                       )}
@@ -393,18 +442,18 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
           </table>
         </div>
 
-        {/* Rodapé de Assinatura para Impressão */}
-        <div className="hidden print:grid grid-cols-3 gap-6 text-center text-[8pt] p-4 mt-6 border-t border-gray-400">
+        {/* Rodapé de Assinatura para Impressão (Compacto) */}
+        <div className="hidden print:grid grid-cols-3 gap-6 text-center text-[7pt] p-2 mt-2 border-t border-gray-400">
           <div>
-            <div className="border-b border-black mb-1 h-6" />
+            <div className="border-b border-black mb-0.5 h-4" />
             <span className="font-bold">Visto 1º Turno</span>
           </div>
           <div>
-            <div className="border-b border-black mb-1 h-6" />
+            <div className="border-b border-black mb-0.5 h-4" />
             <span className="font-bold">Visto 2º Turno</span>
           </div>
           <div>
-            <div className="border-b border-black mb-1 h-6" />
+            <div className="border-b border-black mb-0.5 h-4" />
             <span className="font-bold">Visto 3º Turno / Supervisão</span>
           </div>
         </div>

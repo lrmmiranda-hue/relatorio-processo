@@ -2,6 +2,7 @@ export interface ShiftReport {
   operatorName: string;
   generalDescription: string;
   machines: Record<string, string>; // MachineName -> Status/Observation
+  machineParts?: Record<string, string>; // MachineName -> Part Number / Peça
 }
 
 export interface DailyProcessReport {
@@ -12,6 +13,7 @@ export interface DailyProcessReport {
     shift2: ShiftReport;
     shift3: ShiftReport;
   };
+  machineParts?: Record<string, string>; // MachineName -> Peça atual do dia
   createdAt?: number;
   updatedAt?: number;
 }

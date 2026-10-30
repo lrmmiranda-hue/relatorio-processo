@@ -3,10 +3,50 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import firebaseConfig from './firebase-applet-config.json';
 import type { DailyProcessReport, UserProfile } from './types';
+import { INITIAL_MACHINE_PARTS } from './constants/machines';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Obtém as peças herdadas para a data (a partir do dia 26/10/2026, mantendo o dia anterior até alteração)
+export async function getInheritedMachineParts(targetDate: string): Promise<Record<string, string>> {
+  const partsAccumulator: Record<string, string> = { ...INITIAL_MACHINE_PARTS };
+
+  try {
+    const snap = await getDocs(collection(db, 'daily_reports'));
+    // Ordena as datas anteriores ou iguais a targetDate em ordem cronológica crescente
+    const sortedDocs = snap.docs
+      .map(d => ({ id: d.id, data: d.data() as DailyProcessReport }))
+      .filter(d => d.id <= targetDate && d.id >= '2026-10-26')
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+    // Reproduz as atualizações de peças até a data alvo
+    for (const d of sortedDocs) {
+      if (d.data.machineParts) {
+        Object.entries(d.data.machineParts).forEach(([m, p]) => {
+          if (p && String(p).trim()) {
+            partsAccumulator[m] = String(p).trim();
+          }
+        });
+      }
+      for (const sk of ['shift1', 'shift2', 'shift3'] as const) {
+        const sParts = d.data.shifts?.[sk]?.machineParts;
+        if (sParts) {
+          Object.entries(sParts).forEach(([m, p]) => {
+            if (p && String(p).trim()) {
+              partsAccumulator[m] = String(p).trim();
+            }
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Não foi possível calcular herança dinâmica de peças:', err);
+  }
+
+  return partsAccumulator;
+}
 
 // Busca PONTUAL sob demanda de 1 relatório (apenas a data selecionada)
 export async function getDailyReportFirebase(dateStr: string): Promise<DailyProcessReport | null> {
@@ -111,30 +151,38 @@ export async function searchAllDailyReportsFirebase(query: string): Promise<Glob
         if (!shiftObj) return;
 
         // Procura nas máquinas do turno
-        if (shiftObj.machines) {
-          Object.entries(shiftObj.machines).forEach(([mName, note]) => {
-            if (!note) return;
-            const noteStr = String(note).trim();
-            if (!noteStr) return;
+        // Procura nas máquinas e peças do turno
+        const allTurnMachines = new Set([
+          ...Object.keys(shiftObj.machines || {}),
+          ...Object.keys(shiftObj.machineParts || {}),
+          ...Object.keys(data.machineParts || {})
+        ]);
 
-            // Bate com nome da máquina, texto da anotação, data ou operador
-            if (
-              mName.toLowerCase().includes(cleanQuery) ||
-              noteStr.toLowerCase().includes(cleanQuery) ||
-              date.includes(cleanQuery) ||
-              (shiftObj.operatorName && shiftObj.operatorName.toLowerCase().includes(cleanQuery))
-            ) {
-              results.push({
-                date,
-                shiftKey: sk,
-                shiftName: shiftNames[sk] || sk,
-                machine: mName,
-                text: noteStr,
-                operatorName: shiftObj.operatorName
-              });
-            }
-          });
-        }
+        allTurnMachines.forEach((mName) => {
+          const note = shiftObj.machines?.[mName];
+          const noteStr = note ? String(note).trim() : '';
+          const partStr = shiftObj.machineParts?.[mName] || data.machineParts?.[mName] || '';
+
+          if (!noteStr && !partStr) return;
+
+          // Bate com nome da máquina, texto da peça, texto da anotação, data ou operador
+          if (
+            mName.toLowerCase().includes(cleanQuery) ||
+            partStr.toLowerCase().includes(cleanQuery) ||
+            noteStr.toLowerCase().includes(cleanQuery) ||
+            date.includes(cleanQuery) ||
+            (shiftObj.operatorName && shiftObj.operatorName.toLowerCase().includes(cleanQuery))
+          ) {
+            results.push({
+              date,
+              shiftKey: sk,
+              shiftName: shiftNames[sk] || sk,
+              machine: mName,
+              text: partStr ? (noteStr ? `[PEÇA: ${partStr}] ${noteStr}` : `[PEÇA: ${partStr}]`) : noteStr,
+              operatorName: shiftObj.operatorName
+            });
+          }
+        });
       });
     });
 

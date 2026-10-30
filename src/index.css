@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   body {
@@ -447,31 +448,52 @@ html.light body {
    3. BOTÕES COM FUNDO VERMELHO: FONTE BRANCA E SEM MUDANÇA NO HOVER
    ══════════════════════════════════════════════════════════════════════════ */
 .light button.bg-red-600,
-.light button.bg-red-600 *,
+.light button.bg-red-600 span,
 .light button.bg-red-500,
-.light button.bg-red-500 *,
+.light button.bg-red-500 span,
 .light button.bg-emerald-500,
-.light button.bg-emerald-500 *,
+.light button.bg-emerald-500 span,
 .dark button.bg-red-600,
-.dark button.bg-red-600 *,
+.dark button.bg-red-600 span,
 .dark button.bg-red-500,
-.dark button.bg-red-500 * {
+.dark button.bg-red-500 span {
   color: #ffffff !important;
-  fill: #ffffff !important;
+}
+
+/* Ícones Lucide React: preserva estritamente o contorno (stroke) sem preenchimento opaco */
+svg,
+svg *,
+button svg,
+button svg * {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+/* Input da Peça dentro do Badge âmbar */
+.part-badge-input,
+.light .part-badge-input,
+.dark .part-badge-input {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto !important;
 }
 
 /* Ao passar mouse nos botões vermelhos: NÃO mudar fundo nem fonte */
 .light button.bg-red-600:hover,
-.light button.bg-red-600:hover *,
+.light button.bg-red-600:hover span,
 .light button.bg-red-500:hover,
-.light button.bg-red-500:hover *,
+.light button.bg-red-500:hover span,
 .dark button.bg-red-600:hover,
-.dark button.bg-red-600:hover *,
+.dark button.bg-red-600:hover span,
 .dark button.bg-red-500:hover,
-.dark button.bg-red-500:hover * {
+.dark button.bg-red-500:hover span {
   background-color: #dc2626 !important;
   color: #ffffff !important;
-  fill: #ffffff !important;
 }
 
 

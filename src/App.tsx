@@ -23,12 +23,14 @@ import {
   Sun,
   Moon,
   LogOut,
+  Printer,
   User as UserIcon
 } from 'lucide-react';
 import logo1Img from './assets/logo1.png';
 import { 
   auth, 
   getDailyReportFirebase, 
+  getInheritedMachineParts,
   saveDailyReportFirebase, 
   getUserProfileFirebase,
   searchAllDailyReportsFirebase
@@ -44,7 +46,7 @@ import {
   getCurrentActiveShift 
 } from './shiftUtils';
 import type { ShiftKey } from './shiftUtils';
-import { DEFAULT_MACHINES } from './constants/machines';
+import { DEFAULT_MACHINES, INITIAL_MACHINE_PARTS, sanitizePartCode } from './constants/machines';
 import { PasswordUnlockModal } from './components/PasswordUnlockModal';
 import { LoginModal } from './components/LoginModal';
 import { MenuDrawer } from './components/MenuDrawer';
@@ -216,23 +218,33 @@ export default function App() {
   const reportRef = useRef<DailyProcessReport | null>(report);
   reportRef.current = report;
 
-  // Busca PONTUAL do relatório da data selecionada
+  // Busca PONTUAL do relatório da data selecionada com herança automática de peças do dia anterior
   useEffect(() => {
     let isCancelled = false;
     async function loadData() {
       setLoading(true);
       try {
-        const data = await getDailyReportFirebase(selectedDate);
+        const [data, inheritedParts] = await Promise.all([
+          getDailyReportFirebase(selectedDate),
+          getInheritedMachineParts(selectedDate)
+        ]);
+
         if (!isCancelled) {
           setIsDirty(false);
           setLastAutoSavedTime(null);
           if (data) {
-            setReport(data);
+            // Mescla as peças herdadas do dia anterior para as máquinas sem peça explicitamente alterada
+            const mergedParts = { ...inheritedParts, ...(data.machineParts || {}) };
+            setReport({
+              ...data,
+              machineParts: mergedParts
+            });
           } else {
-            // Inicializa estrutura limpa para o dia
+            // Inicializa estrutura para o dia com as peças mantidas do dia anterior
             setReport({
               id: selectedDate,
               date: selectedDate,
+              machineParts: inheritedParts,
               shifts: {
                 shift1: getEmptyShift(),
                 shift2: getEmptyShift(),
@@ -254,14 +266,20 @@ export default function App() {
     };
   }, [selectedDate]);
 
-  // Lista consolidada de máquinas (padrão + registradas no relatório)
+  // Lista consolidada de máquinas (padrão + registradas no relatório ou com peças)
   const allMachines = useMemo(() => {
     const set = new Set([...DEFAULT_MACHINES]);
     if (report) {
+      if (report.machineParts) {
+        Object.keys(report.machineParts).forEach((m) => set.add(m));
+      }
       for (const sk of ['shift1', 'shift2', 'shift3'] as const) {
         const shiftObj = report.shifts?.[sk];
         if (shiftObj?.machines) {
           Object.keys(shiftObj.machines).forEach((m) => set.add(m));
+        }
+        if (shiftObj?.machineParts) {
+          Object.keys(shiftObj.machineParts).forEach((m) => set.add(m));
         }
       }
     }
@@ -275,7 +293,21 @@ export default function App() {
     });
   }, [report]);
 
-  // Filtro de máquinas na tela
+  // Consulta a peça atual da máquina para exibição e edição (com fallback para peças herdadas)
+  const getMachinePart = (machineName: string) => {
+    const shiftPart = report?.shifts?.[activeShift]?.machineParts?.[machineName];
+    if (shiftPart) return shiftPart;
+    if (report?.machineParts?.[machineName]) return report.machineParts[machineName];
+    return (
+      report?.shifts?.shift3?.machineParts?.[machineName] ||
+      report?.shifts?.shift2?.machineParts?.[machineName] ||
+      report?.shifts?.shift1?.machineParts?.[machineName] ||
+      INITIAL_MACHINE_PARTS[machineName] ||
+      ''
+    );
+  };
+
+  // Filtro de máquinas na tela (busca por máquina, peça ou apontamento)
   const filteredMachines = useMemo(() => {
     return allMachines.filter((m) => {
       if (selectedMachineFilter !== 'ALL' && m !== selectedMachineFilter) return false;
@@ -283,9 +315,11 @@ export default function App() {
       const q = searchQuery.trim().toLowerCase();
       if (q) {
         const matchName = m.toLowerCase().includes(q);
+        const partVal = getMachinePart(m).toLowerCase();
+        const matchPart = partVal.includes(q);
         const val = (report?.shifts?.[activeShift]?.machines?.[m] || '').toLowerCase();
         const matchText = val.includes(q);
-        if (!matchName && !matchText) return false;
+        if (!matchName && !matchText && !matchPart) return false;
       }
 
       if (filterOnlyWithNotes) {
@@ -341,16 +375,17 @@ export default function App() {
     }
   };
 
-  // Modificação de máquina individual
+  // Modificação de máquina individual (Sempre em MAIÚSCULAS)
   const handleMachineChange = (machineName: string, value: string) => {
     if (!canEdit || !report) return;
     setIsDirty(true);
+    const upperVal = value.toUpperCase();
     const currentShift = report.shifts?.[activeShift] || getEmptyShift();
     const updatedMachines = { ...currentShift.machines };
-    if (!value.trim()) {
+    if (!upperVal.trim()) {
       delete updatedMachines[machineName];
     } else {
-      updatedMachines[machineName] = value;
+      updatedMachines[machineName] = upperVal;
     }
 
     setReport({
@@ -360,6 +395,36 @@ export default function App() {
         [activeShift]: {
           ...currentShift,
           machines: updatedMachines
+        }
+      }
+    });
+  };
+
+  // Modificação da peça produzida na máquina (Sempre em 4 dígitos e MAIÚSCULAS)
+  const handlePartChange = (machineName: string, value: string) => {
+    if (!canEdit || !report) return;
+    setIsDirty(true);
+    const sanitizedVal = sanitizePartCode(value);
+    const currentShift = report.shifts?.[activeShift] || getEmptyShift();
+    const updatedShiftParts = { ...(currentShift.machineParts || {}) };
+    const updatedDayParts = { ...(report.machineParts || {}) };
+
+    if (!sanitizedVal) {
+      delete updatedShiftParts[machineName];
+      delete updatedDayParts[machineName];
+    } else {
+      updatedShiftParts[machineName] = sanitizedVal;
+      updatedDayParts[machineName] = sanitizedVal;
+    }
+
+    setReport({
+      ...report,
+      machineParts: updatedDayParts,
+      shifts: {
+        ...report.shifts,
+        [activeShift]: {
+          ...currentShift,
+          machineParts: updatedShiftParts
         }
       }
     });
@@ -540,8 +605,18 @@ export default function App() {
               {renderShiftSelector(false)}
             </div>
 
-            {/* Canto Superior Direito: Alternar Tema (sem fundo) e Login Circular (Apenas PC; no celular já tem no menu) */}
+            {/* Canto Superior Direito: Impressão, Tema e Login Circular (Apenas PC; no celular já tem no menu) */}
             <div className="flex items-center gap-2 shrink-0">
+              {/* Botão Imprimir / Salvar PDF: Apenas no modo PC */}
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="hidden sm:flex p-1.5 text-slate-400 hover:text-red-400 transition-colors cursor-pointer items-center justify-center rounded-lg"
+                title="Imprimir relatório / Salvar PDF em 1 página"
+              >
+                <Printer className="w-4 h-4" />
+              </button>
+
               {/* Alternar Modo Claro/Escuro: Apenas no modo PC */}
               <button
                 onClick={toggleTheme}
@@ -866,8 +941,8 @@ export default function App() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Buscar em todos os relatórios..."
-                        className="w-full px-2.5 py-1.5 pl-8 pr-7 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-500"
+                        placeholder="Buscar célula, peça ou relatório..."
+                        className="w-full px-2.5 py-1.5 pl-8 pr-7 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-500 uppercase"
                       />
                       <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-2.5" />
                       {searchQuery && (
@@ -977,77 +1052,90 @@ export default function App() {
                 {filteredMachines.map((machine) => {
                   const val = currentShiftData.machines?.[machine] || '';
                   const hasVal = Boolean(val.trim());
+                  const part = getMachinePart(machine);
 
                   return (
                     <div
                       key={machine}
-                      className={`p-2.5 rounded-xl border transition-all ${
+                      className={`p-2 sm:p-2.5 rounded-xl border transition-all ${
                         hasVal
-                          ? 'bg-slate-950 border-cyan-500/30 shadow-md shadow-cyan-950/20'
-                          : 'bg-slate-950/40 border-slate-800'
+                          ? 'bg-white dark:bg-slate-950 border-cyan-500/40 dark:border-cyan-500/30 shadow-xs dark:shadow-md dark:shadow-cyan-950/20'
+                          : 'bg-white dark:bg-slate-950/40 border-slate-200 dark:border-slate-800'
                       }`}
                     >
-                      {/* Header da Máquina com Botões Rápidos */}
-                      <div className="flex items-center justify-between gap-1 mb-1.5">
-                        <span className="text-sm font-bold text-white tracking-wide font-mono">
-                          {machine}
-                        </span>
+                      {/* Header da Máquina com Nome, Badge da Peça e Botões Rápidos */}
+                      <div className="flex items-center justify-between gap-1 mb-1.5 flex-nowrap">
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white tracking-tight font-mono shrink-0">
+                            {machine}
+                          </span>
+
+                          {/* Badge da Peça no estilo âmbar idêntico ao modo leitura (sem P: e sem tooltip) */}
+                          <div className="flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono font-bold text-[10px] shrink-0">
+                            <input
+                              type="text"
+                              disabled={!canEdit}
+                              value={part}
+                              onChange={(e) => handlePartChange(machine, e.target.value)}
+                              placeholder="0000"
+                              maxLength={4}
+                              className="part-badge-input w-9 sm:w-10 bg-transparent text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400 uppercase focus:outline-none placeholder-amber-500/40 border-none p-0 text-center tracking-wider"
+                            />
+                          </div>
+                        </div>
 
                         {canEdit && (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                             <button
                               type="button"
                               onClick={() => handleMachineChange(machine, 'OK')}
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                val === 'OK'
-                                  ? 'bg-emerald-500/30 text-emerald-300 border-emerald-500/50 shadow-xs'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                              className={`px-1 sm:px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-bold border transition-colors cursor-pointer uppercase ${
+                                val.toUpperCase() === 'OK'
+                                  ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/50 shadow-xs'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700'
                               }`}
-                              title="Marcar máquina como OK"
                             >
                               OK
                             </button>
 
                             <button
                               type="button"
-                              onClick={() => handleMachineChange(machine, 'Sem Bruto')}
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                val === 'Sem Bruto'
-                                  ? 'bg-amber-500/30 text-amber-300 border-amber-500/50 shadow-xs'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                              onClick={() => handleMachineChange(machine, 'SEM BRUTO')}
+                              className={`px-1 sm:px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-bold border transition-colors cursor-pointer uppercase whitespace-nowrap ${
+                                val.toUpperCase() === 'SEM BRUTO'
+                                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/50 shadow-xs'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700'
                               }`}
-                              title="Marcar como Sem Bruto"
                             >
-                              Sem Bruto
+                              SEM BRUTO
                             </button>
 
                             <button
                               type="button"
-                              onClick={() => handleMachineChange(machine, 'Manutenção')}
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                val === 'Manutenção'
-                                  ? 'bg-red-500/30 text-red-300 border-red-500/50 shadow-xs'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                              onClick={() => handleMachineChange(machine, 'MANUTENÇÃO')}
+                              className={`px-1 sm:px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-bold border transition-colors cursor-pointer uppercase whitespace-nowrap ${
+                                val.toUpperCase() === 'MANUTENÇÃO'
+                                  ? 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/50 shadow-xs'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700'
                               }`}
-                              title="Marcar como Manutenção"
                             >
-                              Manutenção
+                              MANUTENÇÃO
                             </button>
                           </div>
                         )}
                       </div>
 
-                      {/* Textarea para observações da máquina */}
+                      {/* Textarea para observações da máquina (sempre em letras maiúsculas) */}
                       <textarea
-                        rows={3}
+                        rows={2}
                         disabled={!canEdit}
-                        value={val}
-                        onChange={(e) => handleMachineChange(machine, e.target.value)}
-                        placeholder={canEdit ? 'Sem ocorrências ou digite a anotação...' : 'Sem ocorrências.'}
-                        className={`w-full p-2 rounded-lg border text-xs focus:outline-none resize-none custom-scrollbar ${
+                        value={val.toUpperCase()}
+                        onChange={(e) => handleMachineChange(machine, e.target.value.toUpperCase())}
+                        placeholder={canEdit ? 'SEM OCORRÊNCIAS OU DIGITE A ANOTAÇÃO...' : 'SEM OCORRÊNCIAS.'}
+                        className={`w-full p-2 rounded-lg border text-[11px] uppercase focus:outline-none resize-none custom-scrollbar ${
                           canEdit
-                            ? 'bg-slate-900 border-slate-700 text-slate-200 focus:border-red-500'
-                            : 'bg-slate-900/40 border-slate-800 text-slate-400 cursor-not-allowed'
+                            ? 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:border-red-500'
+                            : 'bg-slate-100/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed'
                         }`}
                       />
 
