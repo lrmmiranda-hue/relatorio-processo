@@ -197,12 +197,12 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         {/* Versão Celular: Barra Ultra Compacta de 1 linha */}
         <div className="sm:hidden flex items-center justify-between px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px]">
           <div className="flex items-center gap-1.5 truncate text-slate-300">
-            <span className="font-mono text-cyan-400 font-bold">{displayedMachines.length}</span>
-            <span className="text-slate-400">células</span>
-            {(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL') && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-semibold truncate">
-                Filtrado
+            {(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL') ? (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold truncate">
+                Filtros Ativos
               </span>
+            ) : (
+              <span className="text-[10px] text-slate-400 font-medium">Matriz Diária</span>
             )}
           </div>
           <div className="flex items-center gap-2">

@@ -9,69 +9,122 @@
   }
 }
 
-/* Ícone nativo do calendário no input[type="date"] na mesma cor da fonte da data (ciano) */
+/* Ícone nativo do calendário no input[type="date"] no modo escuro (ciano) */
 input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   filter: invert(79%) sepia(50%) saturate(1478%) hue-rotate(152deg) brightness(101%) contrast(97%);
   opacity: 1;
 }
 
-/* Suporte ao Modo Claro (Light Mode) */
+/* ══════════════════════════════════════════════════════════════════════════
+   MODO CLARO (LIGHT MODE): BRANCO, CINZA GRAFITE E VERMELHO CORPORATIVO ATMS
+   ══════════════════════════════════════════════════════════════════════════ */
 .light,
 .light body {
-  background-color: #f8fafc !important; /* slate-50 */
-  color: #0f172a !important; /* slate-900 */
+  background-color: #f8fafc !important; /* Branco off-white suave de fundo */
+  color: #0f172a !important;            /* Cinza grafite bem escuro para nitidez */
 }
 
+/* Cabeçalho e Painéis Principais */
 .light header {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05) !important;
 }
 
-.light .bg-slate-900 {
+.light header h1 {
+  color: #0f172a !important; /* Título principal em grafite forte */
+}
+
+/* Containers de Fundo Escuro convertidos para Branco e Cinza Grafite */
+.light .bg-slate-900,
+.light .bg-slate-900\/40,
+.light .bg-slate-900\/80,
+.light .bg-slate-900\/90 {
   background-color: #ffffff !important;
 }
 
-.light .bg-slate-950 {
+.light .bg-slate-950,
+.light .bg-slate-950\/40,
+.light .bg-slate-950\/80 {
+  background-color: #f8fafc !important;
+}
+
+.light .bg-slate-800,
+.light .bg-slate-800\/60,
+.light .bg-slate-800\/80 {
   background-color: #f1f5f9 !important;
 }
 
-.light .bg-slate-800 {
-  background-color: #e2e8f0 !important;
-}
-
+/* Bordas em Cinza Grafite Suave */
 .light .border-slate-800,
+.light .border-slate-800\/60,
+.light .border-slate-800\/70,
 .light .border-slate-700 {
-  border-color: #cbd5e1 !important;
+  border-color: #e2e8f0 !important;
 }
 
+/* Tipografia de Alto Contraste (Cinza Grafite) */
 .light .text-white {
-  color: #0f172a !important;
+  color: #0f172a !important; /* Grafite escuro para títulos e textos principais */
 }
 
 .light .text-slate-100,
 .light .text-slate-200,
 .light .text-slate-300 {
-  color: #1e293b !important;
+  color: #1e293b !important; /* Grafite médio para leitura nítida */
 }
 
 .light .text-slate-400 {
-  color: #64748b !important;
+  color: #475569 !important; /* Grafite legível para detalhes secundários */
 }
 
 .light .text-slate-500 {
-  color: #94a3b8 !important;
+  color: #64748b !important; /* Cinza de suporte */
 }
 
+.light .text-slate-600 {
+  color: #94a3b8 !important; /* Cinza para traço vazio */
+}
+
+/* ── DESTAQUES EM VERMELHO CORPORATIVO ATMS ── */
+/* Botão Ativo (Leitura / Preencher) */
+.light .bg-cyan-500 {
+  background-color: #dc2626 !important; /* Vermelho ATMS */
+  color: #ffffff !important;            /* Texto branco contrastante */
+}
+
+.light .bg-cyan-500:hover {
+  background-color: #b91c1c !important;
+}
+
+/* Textos e Badges de Destaque */
 .light .text-cyan-400,
 .light .text-cyan-300 {
-  color: #0891b2 !important; /* cyan-600 */
+  color: #dc2626 !important; /* Vermelho corporativo */
 }
 
+/* Fundos e Bordas de Destaque */
+.light .bg-cyan-500\/10,
+.light .bg-cyan-500\/15,
+.light .bg-cyan-500\/20 {
+  background-color: #fef2f2 !important; /* Vermelho bem claro */
+  color: #991b1b !important;
+}
+
+.light .border-cyan-500,
+.light .border-cyan-500\/30,
+.light .border-cyan-500\/40,
+.light .border-cyan-500\/50 {
+  border-color: #fca5a5 !important;
+}
+
+/* Ícone de Calendário em Vermelho no Modo Claro */
 .light input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(45%) sepia(90%) saturate(700%) hue-rotate(155deg) brightness(95%) contrast(100%);
+  filter: invert(19%) sepia(87%) saturate(5436%) hue-rotate(355deg) brightness(92%) contrast(92%) !important;
 }
 
+/* Inputs, Selects e Textareas no Modo Claro */
 .light input,
 .light select,
 .light textarea {
@@ -80,9 +133,106 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-color: #cbd5e1 !important;
 }
 
+.light input:focus,
+.light select:focus,
+.light textarea:focus {
+  border-color: #dc2626 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+}
+
 .light input::placeholder,
 .light textarea::placeholder {
   color: #94a3b8 !important;
+}
+
+/* ── TABELA DE MATRIZ DE CÉLULAS E TURNOS NO MODO CLARO ── */
+.light #printable-matrix-report {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05) !important;
+}
+
+.light #printable-matrix-report thead tr {
+  background-color: #f1f5f9 !important; /* Cabeçalho cinza grafite claro */
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+.light #printable-matrix-report th {
+  color: #0f172a !important; /* Nomes das colunas em grafite escuro forte */
+}
+
+.light #printable-matrix-report tbody tr {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light #printable-matrix-report tbody tr:nth-child(even) {
+  background-color: #f8fafc !important; /* Linhas alternadas sutis */
+}
+
+.light #printable-matrix-report tbody tr:hover {
+  background-color: #fef2f2 !important; /* Hover avermelhado suave */
+}
+
+.light #printable-matrix-report td {
+  border-color: #e2e8f0 !important;
+}
+
+/* Informações Digitadas dentro da Matriz */
+.light #printable-matrix-report td div {
+  color: #1e293b !important; /* Texto digitado em grafite legível sem negrito */
+}
+
+/* ── BANNERS DE STATUS NO MODO CLARO (SEM FUNDOS ESCUROS) ── */
+.light .bg-emerald-500\/10 {
+  background-color: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+.light .text-emerald-300,
+.light .text-emerald-400 {
+  color: #15803d !important; /* Verde escuro legível */
+}
+
+.light .bg-amber-500\/10 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+
+.light .text-amber-200,
+.light .text-amber-300,
+.light .text-amber-400 {
+  color: #b45309 !important; /* Âmbar escuro legível */
+}
+
+.light .bg-red-500\/15,
+.light .bg-red-500\/30 {
+  background-color: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+}
+
+.light .text-red-300,
+.light .text-red-400 {
+  color: #b91c1c !important; /* Vermelho escuro legível */
+}
+
+/* Cards das Máquinas no Modo de Edição */
+.light .grid > div {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Menu Lateral Drawer no Modo Claro */
+.light .fixed.inset-0 .bg-slate-900 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light .fixed.inset-0 .bg-slate-950 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
 }
 
 /* Custom Scrollbar */
