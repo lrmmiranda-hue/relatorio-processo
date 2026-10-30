@@ -21,8 +21,8 @@ import {
   ArrowRight,
   Sun,
   Moon,
-  LogIn,
-  LogOut
+  LogOut,
+  User as UserIcon
 } from 'lucide-react';
 import logo1Img from './assets/logo1.png';
 import { 
@@ -104,6 +104,8 @@ export default function App() {
 
   // Menu lateral drawer
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // Menu popup do perfil / login circular
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // Filtros de interface
   const [searchQuery, setSearchQuery] = useState('');
@@ -474,80 +476,76 @@ export default function App() {
               {renderHeaderControls()}
             </div>
 
-            {/* Canto Superior Direito: Mesma caixa unificada */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              {/* Botão Salvar (Visível no modo de edição) */}
-              {viewMode === 'EDIT' && (
-                <button
-                  onClick={handleSaveReport}
-                  disabled={!canEdit || loading || saving}
-                  className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
-                    saveSuccess
-                      ? 'bg-emerald-500 text-white shadow-emerald-500/20'
-                      : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
-                  }`}
-                  title="Salvar alterações do relatório"
-                >
-                  {saving ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : saveSuccess ? (
-                    <>
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span className="hidden sm:inline">Salvo!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-3 h-3" />
-                      <span className="hidden sm:inline">Salvar</span>
-                    </>
-                  )}
-                </button>
-              )}
-
-              {/* MODO PC: Alternar Modo Claro/Escuro do lado do Login */}
+            {/* Canto Superior Direito: Alternar Tema (sem fundo) e Login Circular */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Alternar Modo Claro/Escuro: Sem fundo, apenas o ícone */}
               <button
                 onClick={toggleTheme}
-                className="hidden sm:flex p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-400 border border-slate-700 transition-colors cursor-pointer shadow-sm items-center justify-center"
+                className="p-1.5 text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center rounded-lg"
                 title={theme === 'dark' ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
               >
                 {theme === 'dark' ? (
-                  <Sun className="w-4 h-4 text-amber-400" />
+                  <Sun className="w-4 h-4 text-amber-400 hover:scale-110 transition-transform" />
                 ) : (
-                  <Moon className="w-4 h-4 text-cyan-400" />
+                  <Moon className="w-4 h-4 text-cyan-400 hover:scale-110 transition-transform" />
                 )}
               </button>
 
-              {/* MODO PC: Login no canto direito */}
-              <div className="hidden sm:flex items-center">
+              {/* Login em Formato Círculo com a Inicial do Usuário */}
+              <div className="relative">
                 {userProfile ? (
-                  <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-slate-700">
-                    <div className="text-right">
-                      <div 
-                        className="text-xs font-semibold text-white truncate max-w-[120px]"
-                        title={userProfile.username || userProfile.name || ''}
-                      >
-                        {userProfile.username || userProfile.name}
-                      </div>
-                      <div className="text-[9px] text-cyan-400 font-mono leading-none">
-                        {isAdmin ? 'ADMIN' : 'OPERADOR'}
-                      </div>
-                    </div>
+                  <>
                     <button
-                      onClick={handleLogout}
-                      className="p-1 rounded-lg hover:bg-red-500/20 hover:text-red-400 text-slate-400 transition-colors cursor-pointer"
-                      title="Sair da conta"
+                      onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                      className="w-8 h-8 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs flex items-center justify-center uppercase cursor-pointer ring-2 ring-transparent hover:ring-cyan-300 transition-all select-none shadow-sm"
+                      title={`Usuário: ${userProfile.username || userProfile.name} - Clique para opções`}
                     >
-                      <LogOut className="w-3.5 h-3.5" />
+                      {(userProfile.username || userProfile.name || 'U').charAt(0).toUpperCase()}
                     </button>
-                  </div>
+
+                    {isProfileMenuOpen && (
+                      <>
+                        {/* Backdrop transparente para fechar ao clicar fora */}
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        />
+
+                        {/* Menu popup flutuante */}
+                        <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 animate-fade-in">
+                          <div className="px-2.5 py-1.5 border-b border-slate-800 mb-1">
+                            <div 
+                              className="text-xs font-bold text-white truncate"
+                              title={userProfile.username || userProfile.name || ''}
+                            >
+                              {userProfile.username || userProfile.name}
+                            </div>
+                            <div className="text-[10px] text-cyan-400 font-mono font-semibold">
+                              {isAdmin ? 'ADMINISTRADOR' : 'OPERADOR'}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              setIsProfileMenuOpen(false);
+                              handleLogout();
+                            }}
+                            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors cursor-pointer"
+                          >
+                            <LogOut className="w-3.5 h-3.5" />
+                            <span>Desconectar</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </>
                 ) : (
                   <button
                     onClick={() => setIsLoginModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                    className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 flex items-center justify-center cursor-pointer transition-all shadow-sm"
                     title="Entrar com Usuário ou Administrador"
                   >
-                    <LogIn className="w-3.5 h-3.5" />
-                    <span>Entrar</span>
+                    <UserIcon className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -822,6 +820,34 @@ export default function App() {
                     <span>Apenas com Apontamento</span>
                   </button>
                 </div>
+
+                {/* Botão Salvar no canto direito, na mesma direção do Apenas com Apontamento */}
+                {viewMode === 'EDIT' && (
+                  <button
+                    onClick={handleSaveReport}
+                    disabled={!canEdit || loading || saving}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
+                      saveSuccess
+                        ? 'bg-emerald-500 text-white shadow-emerald-500/20'
+                        : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
+                    }`}
+                    title="Salvar alterações do relatório"
+                  >
+                    {saving ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : saveSuccess ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Salvo!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Salvar</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Grade de Máquinas */}
@@ -841,7 +867,7 @@ export default function App() {
                     >
                       {/* Header da Máquina com Botões Rápidos */}
                       <div className="flex items-center justify-between gap-1 mb-2">
-                        <span className="text-xs font-bold text-white tracking-wide">
+                        <span className="text-sm font-bold text-white tracking-wide font-mono">
                           {machine}
                         </span>
 

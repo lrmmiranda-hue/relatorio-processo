@@ -113,7 +113,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
     return (
       <div 
         onClick={() => onOpenEditShift && onOpenEditShift(shiftKey)}
-        className="font-sans text-xs whitespace-pre-wrap break-words text-slate-200 print:text-black font-medium leading-relaxed"
+        className="font-sans text-xs whitespace-pre-wrap break-words text-slate-200 print:text-black font-normal leading-relaxed"
         title="Clique para abrir edição deste turno"
       >
         {trimmed}
@@ -312,13 +312,13 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse table-fixed print-compact-table">
             <thead>
-              <tr className="bg-slate-950 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px] print:bg-gray-200 print:text-black">
-                <th className="p-3 w-36 sm:w-44 shrink-0 font-extrabold text-white print:text-black">
+              <tr className="bg-slate-950 border-b border-slate-800 text-slate-300 font-bold uppercase tracking-wider text-sm print:bg-gray-200 print:text-black">
+                <th className="p-3 w-40 sm:w-48 shrink-0 font-bold text-white print:text-black text-sm uppercase tracking-wider">
                   Célula / Máquina
                 </th>
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift1') && (
                   <th 
-                    className="p-3 border-l border-slate-800 print:border-gray-400"
+                    className="p-3 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-sm uppercase tracking-wider"
                     title="1º Turno (05:00 - 14:18)"
                   >
                     1º Turno
@@ -326,7 +326,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                 )}
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift2') && (
                   <th 
-                    className="p-3 border-l border-slate-800 print:border-gray-400"
+                    className="p-3 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-sm uppercase tracking-wider"
                     title="2º Turno (14:18 - 23:25)"
                   >
                     2º Turno
@@ -334,7 +334,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                 )}
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift3') && (
                   <th 
-                    className="p-3 border-l border-slate-800 print:border-gray-400"
+                    className="p-3 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-sm uppercase tracking-wider"
                     title="3º Turno (23:25 - 05:00)"
                   >
                     3º Turno
@@ -362,7 +362,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                         idx % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-900/90'
                       } hover:bg-slate-800/60 print:bg-transparent`}
                     >
-                      <td className="p-2.5 sm:p-3 font-bold text-white print:text-black font-mono">
+                      <td className="p-2.5 sm:p-3 font-bold text-white print:text-black font-mono text-sm tracking-wide">
                         {machine}
                       </td>
 
