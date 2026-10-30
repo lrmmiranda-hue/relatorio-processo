@@ -151,7 +151,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onUserI
             }}
             className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               loginMode === 'username'
-                ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
                 : 'text-slate-400 hover:text-white hover:bg-slate-900'
             }`}
           >
@@ -166,7 +166,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onUserI
             }}
             className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               loginMode === 'admin'
-                ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
                 : 'text-slate-400 hover:text-white hover:bg-slate-900'
             }`}
           >
@@ -190,7 +190,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onUserI
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
                   placeholder="Ex: facilitadores.usinagem"
-                  className="w-full px-3 py-2 pl-9 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-['Inter',sans-serif]"
+                  className="w-full px-3 py-2 pl-9 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-red-500 font-['Inter',sans-serif]"
                 />
                 <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               </div>
@@ -209,7 +209,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onUserI
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-xl transition-colors cursor-pointer shadow-lg shadow-cyan-400/20 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-xl transition-all cursor-pointer shadow-lg shadow-red-600/30 disabled:opacity-50"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Entrar no Sistema'}
             </button>
@@ -227,7 +227,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onUserI
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@exemplo.com"
-                  className="w-full px-3 py-2 pl-9 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full px-3 py-2 pl-9 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 font-mono"
                 />
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               </div>
@@ -242,7 +242,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onUserI
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2 pl-9 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full px-3 py-2 pl-9 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 font-mono"
                 />
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               </div>
@@ -258,7 +258,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onUserI
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-xl transition-colors cursor-pointer shadow-lg shadow-cyan-400/20 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-xl transition-all cursor-pointer shadow-lg shadow-red-600/30 disabled:opacity-50"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Entrar como Administrador'}
             </button>

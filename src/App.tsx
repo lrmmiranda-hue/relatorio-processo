@@ -260,8 +260,15 @@ export default function App() {
   const filteredMachines = useMemo(() => {
     return allMachines.filter((m) => {
       if (selectedMachineFilter !== 'ALL' && m !== selectedMachineFilter) return false;
-      const matchSearch = m.toLowerCase().includes(searchQuery.toLowerCase());
-      if (!matchSearch) return false;
+      
+      const q = searchQuery.trim().toLowerCase();
+      if (q) {
+        const matchName = m.toLowerCase().includes(q);
+        const val = (report?.shifts?.[activeShift]?.machines?.[m] || '').toLowerCase();
+        const matchText = val.includes(q);
+        if (!matchName && !matchText) return false;
+      }
+
       if (filterOnlyWithNotes) {
         const val = report?.shifts?.[activeShift]?.machines?.[m]?.trim();
         return Boolean(val && val.toUpperCase() !== 'OK');
@@ -424,8 +431,8 @@ export default function App() {
               isFullWidth ? 'w-full' : ''
             } ${
               isSelected
-                ? 'bg-slate-800 text-red-400 shadow-sm border border-slate-700'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                ? 'bg-red-600 text-white shadow-sm border border-red-500'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800/40'
             }`}
           >
             <span>{shiftLabels[sk]}</span>
@@ -438,11 +445,11 @@ export default function App() {
               />
             ) : isAdmin || isUnlocked ? (
               <span title="Edição liberada pelo administrador" className="shrink-0">
-                <Unlock className="w-2.5 h-2.5 text-red-400" />
+                <Unlock className={`w-2.5 h-2.5 ${isSelected ? 'text-white' : 'text-red-500'}`} />
               </span>
             ) : (
               <span title="Fora do horário do turno" className="shrink-0">
-                <Lock className="w-2.5 h-2.5 text-slate-500" />
+                <Lock className={`w-2.5 h-2.5 ${isSelected ? 'text-white/80' : 'text-slate-400'}`} />
               </span>
             )}
           </button>
@@ -557,15 +564,15 @@ export default function App() {
                 )}
               </div>
 
-              {/* MODO CELULAR: Apenas o botão Menu (Tema e Login já estão dentro do menu) */}
+              {/* MODO CELULAR: Apenas o ícone Menu sem fundo no botão */}
               <button
                 onClick={() => setIsMenuOpen(true)}
-                className="sm:hidden relative p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-red-400 border border-slate-700 transition-colors cursor-pointer shadow-sm flex items-center gap-1"
-                title="Abrir Menu (Filtros, Modo Claro, Deslogar)"
+                className="sm:hidden relative p-1 text-slate-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer flex items-center justify-center bg-transparent border-none shadow-none"
+                title="Abrir Menu"
               >
-                <Menu className="w-4 h-4 text-slate-200" />
+                <Menu className="w-6 h-6" />
                 {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL' || selectedMachineFilter !== 'ALL') && (
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse absolute -top-0.5 -right-0.5" />
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse absolute top-0.5 right-0.5" />
                 )}
               </button>
             </div>
@@ -639,18 +646,18 @@ export default function App() {
       <main className="no-print flex-1 max-w-7xl mx-auto w-full px-3 sm:px-4 py-3 space-y-3">
         {/* ── PAINEL DE RESULTADOS DA BUSCA GLOBAL (TODOS OS RELATÓRIOS E DATAS) ── */}
         {hasSearchedGlobal && (
-          <div className="bg-slate-900 border border-cyan-500/40 rounded-2xl p-3.5 space-y-3 shadow-xl animate-fade-in">
+          <div className="bg-slate-900 border border-red-500/40 rounded-2xl p-3.5 space-y-3 shadow-xl animate-fade-in">
             <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-800">
               <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-cyan-400 shrink-0" />
+                <History className="w-4 h-4 text-red-500 shrink-0" />
                 <h3 className="text-xs sm:text-sm font-bold text-white">
                   Busca em Todos os Relatórios e Datas:
-                  <span className="text-cyan-300 ml-1.5 font-normal">"{searchQuery}"</span>
+                  <span className="text-red-400 ml-1.5 font-normal">"{searchQuery}"</span>
                 </h3>
               </div>
               <div className="flex items-center gap-2">
                 {isSearchingGlobal ? (
-                  <div className="flex items-center gap-1.5 text-xs text-cyan-400">
+                  <div className="flex items-center gap-1.5 text-xs text-red-400">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     <span className="text-[11px]">Consultando...</span>
                   </div>
@@ -674,7 +681,7 @@ export default function App() {
 
             {isSearchingGlobal ? (
               <div className="py-6 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
-                <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                <Loader2 className="w-6 h-6 animate-spin text-red-500" />
                 <span>Buscando informações em todo o histórico de relatórios...</span>
               </div>
             ) : globalSearchResults.length === 0 ? (
@@ -693,16 +700,21 @@ export default function App() {
                       onClick={() => {
                         setSelectedDate(item.date);
                         setActiveShift(item.shiftKey);
+                        if (viewMode === 'READ') {
+                          setSelectedShiftFilter(item.shiftKey);
+                        }
                         setSelectedMachineFilter(item.machine);
+                        setSearchQuery('');
                         setHasSearchedGlobal(false);
+                        setGlobalSearchResults([]);
                       }}
-                      className="p-2.5 sm:p-3 rounded-xl bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 transition-all cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm"
-                      title="Clique para abrir este relatório e turno"
+                      className="p-2.5 sm:p-3 rounded-xl bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-red-500/50 transition-all cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm"
+                      title={`Clique para abrir o relatório de ${dateBr} (${item.shiftName})`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <span className="text-xs font-mono font-bold text-cyan-400">
-                            {dateBr}
+                          <span className="text-xs font-mono font-bold text-red-400">
+                            📅 {dateBr}
                           </span>
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
                             {item.shiftName}
@@ -720,8 +732,8 @@ export default function App() {
                           {item.text}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-cyan-400 group-hover:text-cyan-300 shrink-0 sm:self-center">
-                        <span>Ver data</span>
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-red-400 group-hover:text-red-300 shrink-0 sm:self-center">
+                        <span>Ver data filtrada</span>
                         <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -734,7 +746,7 @@ export default function App() {
 
         {loading ? (
           <div className="h-64 flex flex-col items-center justify-center gap-3 text-slate-400">
-            <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+            <Loader2 className="w-8 h-8 animate-spin text-red-500" />
             <span className="text-xs">Carregando diário de bordo do dia...</span>
           </div>
         ) : !report ? (
@@ -743,18 +755,25 @@ export default function App() {
           </div>
         ) : viewMode === 'READ' ? (
           <>
-            {/* Aviso ultra compacto de filtros ativos */}
-            {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL' || selectedMachineFilter !== 'ALL') && (
-              <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs animate-fade-in">
+            {/* Aviso com a DATA FILTRADA em destaque */}
+            {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL' || selectedMachineFilter !== 'ALL' || selectedDate !== getLocalDateString()) && (
+              <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs animate-fade-in">
                 <div className="flex items-center gap-2 truncate">
-                  <Filter className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
+                  <Filter className="w-3.5 h-3.5 shrink-0 text-red-500" />
                   <span className="truncate">
-                    Filtro: {selectedMachineFilter !== 'ALL' && `[${selectedMachineFilter}]`} {searchQuery && `"${searchQuery}"`} {filterOnlyWithNotes && '• Com apontamento'} {selectedShiftFilter !== 'ALL' && `• ${selectedShiftFilter === 'shift1' ? '1º Turno' : selectedShiftFilter === 'shift2' ? '2º Turno' : '3º Turno'}`}
+                    <strong>Filtro Ativo:</strong> Data: <span className="font-mono font-bold text-white underline decoration-red-500">{(() => {
+                      const [y, m, d] = selectedDate.split('-');
+                      return `${d}/${m}/${y}`;
+                    })()}</span>
+                    {selectedMachineFilter !== 'ALL' && ` • [${selectedMachineFilter}]`}
+                    {searchQuery && ` • Busca: "${searchQuery}"`}
+                    {filterOnlyWithNotes && ' • Com apontamento'}
+                    {selectedShiftFilter !== 'ALL' && ` • ${selectedShiftFilter === 'shift1' ? '1º Turno' : selectedShiftFilter === 'shift2' ? '2º Turno' : '3º Turno'}`}
                   </span>
                 </div>
                 <button
                   onClick={handleClearFilters}
-                  className="text-xs font-bold text-cyan-300 hover:text-white cursor-pointer shrink-0 ml-2"
+                  className="text-xs font-bold text-red-400 hover:text-white cursor-pointer shrink-0 ml-2"
                 >
                   ✕ Limpar
                 </button>

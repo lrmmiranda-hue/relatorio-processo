@@ -28,8 +28,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
   selectedShiftFilter: externalShiftFilter,
   onShiftFilterChange: setExternalShiftFilter,
   selectedMachineFilter,
-  onMachineFilterChange,
-  onOpenMenu
+  onMachineFilterChange
 }) => {
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [internalOnlyWithNotes, setInternalOnlyWithNotes] = useState(false);
@@ -52,12 +51,19 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
   const weekdayName = weekdays[dateObj.getDay()];
 
   // Filtra as máquinas a serem exibidas
-  // Filtra as máquinas a serem exibidas
   const displayedMachines = useMemo(() => {
     return machinesList.filter((m) => {
       if (selectedMachineFilter && selectedMachineFilter !== 'ALL' && m !== selectedMachineFilter) return false;
-      const matchSearch = m.toLowerCase().includes(searchQuery.toLowerCase());
-      if (!matchSearch) return false;
+      
+      const q = searchQuery.trim().toLowerCase();
+      if (q) {
+        const matchName = m.toLowerCase().includes(q);
+        const t1 = (report.shifts?.shift1?.machines?.[m] || '').toLowerCase();
+        const t2 = (report.shifts?.shift2?.machines?.[m] || '').toLowerCase();
+        const t3 = (report.shifts?.shift3?.machines?.[m] || '').toLowerCase();
+        const matchNotes = t1.includes(q) || t2.includes(q) || t3.includes(q);
+        if (!matchName && !matchNotes) return false;
+      }
 
       if (onlyWithNotes) {
         const isRealNote = (v?: string) => {
@@ -173,40 +179,24 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
 
       {/* ── BARRA DE FILTROS DA MATRIZ (COMPACTA NO CELULAR E COMPLETA NO DESKTOP) ── */}
       <div className="no-print">
-        {/* Versão Celular: Barra Ultra Compacta de 1 linha */}
-        <div className="sm:hidden flex items-center justify-between px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px]">
-          <div className="flex items-center gap-1.5 truncate text-slate-300">
-            {(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL') ? (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-semibold truncate">
-                Filtros Ativos
-              </span>
-            ) : (
-              <span className="text-[10px] text-slate-400 font-medium">Matriz Diária</span>
-            )}
+        {/* Versão Celular: Exibe apenas se houver filtros ativos */}
+        {(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL') ? (
+          <div className="sm:hidden flex items-center justify-between px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px] mb-1">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-semibold truncate">
+              Filtros Ativos
+            </span>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                if (onlyWithNotes && toggleExternalOnlyNotes) toggleExternalOnlyNotes();
+                if (setExternalShiftFilter) setExternalShiftFilter('ALL');
+              }}
+              className="text-[10px] text-red-400 hover:text-white font-bold cursor-pointer"
+            >
+              ✕ Limpar Filtros
+            </button>
           </div>
-          <div className="flex items-center gap-2">
-            {(searchQuery.trim() || onlyWithNotes || selectedShiftFilter !== 'ALL') ? (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  if (onlyWithNotes && toggleExternalOnlyNotes) toggleExternalOnlyNotes();
-                  if (setExternalShiftFilter) setExternalShiftFilter('ALL');
-                }}
-                className="text-[10px] text-red-400 hover:text-white font-bold cursor-pointer"
-              >
-                ✕ Limpar
-              </button>
-            ) : null}
-            {onOpenMenu && (
-              <button
-                onClick={onOpenMenu}
-                className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-red-400 font-bold border border-slate-700 cursor-pointer"
-              >
-                Filtros no Menu
-              </button>
-            )}
-          </div>
-        </div>
+        ) : null}
 
         {/* Versão Desktop: Barra Completa */}
         <div className="hidden sm:flex bg-slate-900 border border-slate-800 rounded-2xl p-2.5 items-center justify-between gap-3 shadow-sm">
