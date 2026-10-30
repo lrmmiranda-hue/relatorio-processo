@@ -338,8 +338,8 @@ export default function App() {
         onClick={() => setViewMode('READ')}
         className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
           viewMode === 'READ'
-            ? 'bg-red-600 text-white shadow-sm'
-            : 'text-slate-400 hover:text-white hover:bg-slate-900'
+            ? 'bg-red-600 text-white hover:bg-red-600 hover:text-white shadow-sm'
+            : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
         }`}
         title="Visualizar matriz de todas as máquinas nos 3 turnos"
       >
@@ -350,8 +350,8 @@ export default function App() {
         onClick={() => setViewMode('EDIT')}
         className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
           viewMode === 'EDIT'
-            ? 'bg-red-600 text-white shadow-sm'
-            : 'text-slate-400 hover:text-white hover:bg-slate-900'
+            ? 'bg-red-600 text-white hover:bg-red-600 hover:text-white shadow-sm'
+            : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
         }`}
         title="Preencher apontamentos do turno"
       >
@@ -431,7 +431,7 @@ export default function App() {
               isFullWidth ? 'w-full' : ''
             } ${
               isSelected
-                ? 'bg-red-600 text-white shadow-sm border border-red-500'
+                ? 'bg-red-600 text-white hover:bg-red-600 hover:text-white shadow-sm border border-red-500'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800/40'
             }`}
           >
@@ -957,9 +957,9 @@ export default function App() {
                         value={val}
                         onChange={(e) => handleMachineChange(machine, e.target.value)}
                         placeholder={canEdit ? 'Sem ocorrências ou digite a anotação...' : 'Sem ocorrências.'}
-                        className={`w-full p-2 rounded-lg border text-xs focus:outline-none resize-none ${
+                        className={`w-full p-2 rounded-lg border text-xs focus:outline-none resize-none custom-scrollbar ${
                           canEdit
-                            ? 'bg-slate-900 border-slate-700 text-slate-200 focus:border-cyan-500'
+                            ? 'bg-slate-900 border-slate-700 text-slate-200 focus:border-red-500'
                             : 'bg-slate-900/40 border-slate-800 text-slate-400 cursor-not-allowed'
                         }`}
                       />

@@ -10,6 +10,60 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   COLOR SCHEME & SCROLLBARS NATIVAS (EVITA CALHA BRANCA NO MODO ESCURO)
+   ══════════════════════════════════════════════════════════════════════════ */
+html.dark,
+.dark,
+.dark body,
+.dark textarea,
+.dark input,
+.dark select,
+.dark div {
+  color-scheme: dark !important;
+}
+
+html.light,
+.light,
+.light body {
+  color-scheme: light !important;
+}
+
+/* Scrollbars Universais no Modo Escuro */
+.dark *,
+.dark textarea {
+  scrollbar-color: #383a46 #121317 !important;
+  scrollbar-width: thin !important;
+}
+
+.dark *::-webkit-scrollbar,
+.dark textarea::-webkit-scrollbar,
+.dark .custom-scrollbar::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+  background-color: #121317 !important;
+}
+
+.dark *::-webkit-scrollbar-track,
+.dark textarea::-webkit-scrollbar-track,
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #121317 !important;
+}
+
+.dark *::-webkit-scrollbar-thumb,
+.dark textarea::-webkit-scrollbar-thumb,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #383a46 !important;
+  border-radius: 9999px !important;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover,
+.dark textarea::-webkit-scrollbar-thumb:hover,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #525565 !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
    1. MODO ESCURO (DARK MODE): PRETO CARBONO, CINZA CLARO NAS FONTES E VERMELHO
    ══════════════════════════════════════════════════════════════════════════ */
 .dark,
@@ -92,7 +146,7 @@ html.dark body {
   color: #71717a !important; /* Cinza suave */
 }
 
-/* Destaques em Vermelho no Modo Escuro (substituindo ciano) */
+/* Destaques em Vermelho no Modo Escuro */
 .dark .bg-cyan-500 {
   background-color: #dc2626 !important;
   color: #ffffff !important;
@@ -100,7 +154,7 @@ html.dark body {
 
 .dark .bg-cyan-500:hover,
 .dark .hover\:bg-cyan-400:hover {
-  background-color: #ef4444 !important;
+  background-color: #dc2626 !important;
 }
 
 .dark .text-cyan-400,
@@ -251,8 +305,8 @@ html.light body {
   border-color: #e2e2e5 !important;
 }
 
-/* Tipografia no Modo Claro */
-.light .text-white {
+/* Tipografia no Modo Claro: apenas em elementos fora dos botões vermelhos */
+.light .text-white:not([class*="bg-red-"]):not([class*="bg-red-"] *):not(.bg-red-600 *):not(.bg-red-500 *):not(.bg-emerald-500 *):not(.bg-emerald-600 *) {
   color: #18181b !important; /* Grafite escuro para títulos e textos principais */
 }
 
@@ -282,7 +336,7 @@ html.light body {
 
 .light .bg-cyan-500:hover,
 .light .hover\:bg-cyan-400:hover {
-  background-color: #b91c1c !important;
+  background-color: #dc2626 !important;
 }
 
 .light .text-cyan-400,
@@ -393,7 +447,53 @@ html.light body {
 
 
 /* ══════════════════════════════════════════════════════════════════════════
-   3. BANNERS DE STATUS & SCROLLBAR
+   3. BOTÕES COM FUNDO VERMELHO: FONTE BRANCA E SEM MUDANÇA NO HOVER
+   ══════════════════════════════════════════════════════════════════════════ */
+.light [class*="bg-red-600"],
+.light [class*="bg-red-600"] *,
+.light [class*="bg-red-500"],
+.light [class*="bg-red-500"] *,
+.light .bg-red-600,
+.light .bg-red-600 *,
+.light .bg-red-500,
+.light .bg-red-500 *,
+.dark [class*="bg-red-600"],
+.dark [class*="bg-red-600"] *,
+.dark [class*="bg-red-500"],
+.dark [class*="bg-red-500"] *,
+.dark .bg-red-600,
+.dark .bg-red-600 *,
+.dark .bg-red-500,
+.dark .bg-red-500 * {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Ao passar mouse: NÃO mudar a cor de fundo e NÃO mudar a cor da fonte */
+.light [class*="bg-red-600"]:hover,
+.light [class*="bg-red-600"]:hover *,
+.light [class*="bg-red-500"]:hover,
+.light [class*="bg-red-500"]:hover *,
+.light .bg-red-600:hover,
+.light .bg-red-600:hover *,
+.light .bg-red-500:hover,
+.light .bg-red-500:hover *,
+.dark [class*="bg-red-600"]:hover,
+.dark [class*="bg-red-600"]:hover *,
+.dark [class*="bg-red-500"]:hover,
+.dark [class*="bg-red-500"]:hover *,
+.dark .bg-red-600:hover,
+.dark .bg-red-600:hover *,
+.dark .bg-red-500:hover,
+.dark .bg-red-500:hover * {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   4. BANNERS DE STATUS & SCROLLBAR
    ══════════════════════════════════════════════════════════════════════════ */
 .light .bg-emerald-500\/10 {
   background-color: #f0fdf4 !important;
