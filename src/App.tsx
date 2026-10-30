@@ -888,7 +888,7 @@ export default function App() {
                     <select
                       value={selectedMachineFilter}
                       onChange={(e) => setSelectedMachineFilter(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs font-bold text-red-600 dark:text-red-400 focus:outline-none focus:border-red-500 cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-300 focus:outline-none focus:border-red-500 cursor-pointer"
                       title="Filtrar máquina específica"
                     >
                       <option value="ALL">Todas as Máquinas</option>
@@ -897,13 +897,13 @@ export default function App() {
                       ))}
                     </select>
 
-                    {/* Ver apenas com apontamento - Padronizado com os outros botões */}
+                    {/* Ver apenas com apontamento - Fundo igual ao do filtro de máquina e sem negrito */}
                     <button
                       onClick={() => setFilterOnlyWithNotes(!filterOnlyWithNotes)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer shrink-0 ${
+                      className={`filter-match-select flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs border transition-colors cursor-pointer shrink-0 bg-slate-950 border-slate-700 ${
                         filterOnlyWithNotes
-                          ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/40 shadow-xs'
-                          : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700 hover:text-slate-900 dark:hover:text-white'
+                          ? 'active-filter border-red-500/70 text-red-500 dark:text-red-400'
+                          : 'text-slate-300 hover:text-white'
                       }`}
                       title="Exibir apenas células com anotações ou ocorrências"
                     >
@@ -915,7 +915,7 @@ export default function App() {
                     {(selectedMachineFilter !== 'ALL' || searchQuery.trim() || filterOnlyWithNotes || selectedDate !== getLocalDateString()) && (
                       <button
                         onClick={handleClearFilters}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-600 dark:text-red-400 border border-red-500/30 text-xs font-bold cursor-pointer transition-colors shrink-0"
+                        className="filter-match-select flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-red-500/50 text-red-500 dark:text-red-400 text-xs cursor-pointer transition-colors shrink-0"
                         title="Limpar todos os filtros e voltar para a data de hoje"
                       >
                         <span>✕ Limpar Filtros</span>

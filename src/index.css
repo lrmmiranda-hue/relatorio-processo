@@ -350,15 +350,23 @@ html.light body {
 /* Inputs, Selects e Textareas no Modo Claro */
 .light input,
 .light select,
-.light textarea {
+.light textarea,
+.light .filter-match-select {
   background-color: #ffffff !important;
   color: #18181b !important;
   border-color: #d4d4d8 !important;
 }
 
+.light .filter-match-select.active-filter {
+  background-color: #ffffff !important;
+  border-color: #dc2626 !important;
+  color: #dc2626 !important;
+}
+
 .light input:focus,
 .light select:focus,
-.light textarea:focus {
+.light textarea:focus,
+.light .filter-match-select:focus {
   border-color: #dc2626 !important;
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
