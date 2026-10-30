@@ -459,7 +459,7 @@ export default function App() {
   );
 
   return (
-    <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-red-600 selection:text-white ${theme}`}>
+    <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans ${theme}`}>
       {/* ── TOPO DA APLICAÇÃO (ULTRA COMPACTO PARA CELULAR E DESKTOP) ── */}
       <header className="no-print bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-2.5 py-1.5 sm:px-4 sm:py-2">
         <div className="max-w-7xl mx-auto flex flex-col gap-1.5">

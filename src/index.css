@@ -17,8 +17,7 @@ html.dark,
 .dark body,
 .dark textarea,
 .dark input,
-.dark select,
-.dark div {
+.dark select {
   color-scheme: dark !important;
 }
 
@@ -126,7 +125,7 @@ html.dark body {
   border-color: #262832 !important;
 }
 
-/* Tipografia no Modo Escuro: Cinza Claro de Alto Contraste */
+/* Tipografia no Modo Escuro */
 .dark .text-white {
   color: #f4f4f5 !important; /* Títulos em cinza claríssimo */
 }
@@ -150,11 +149,6 @@ html.dark body {
 .dark .bg-cyan-500 {
   background-color: #dc2626 !important;
   color: #ffffff !important;
-}
-
-.dark .bg-cyan-500:hover,
-.dark .hover\:bg-cyan-400:hover {
-  background-color: #dc2626 !important;
 }
 
 .dark .text-cyan-400,
@@ -305,8 +299,8 @@ html.light body {
   border-color: #e2e2e5 !important;
 }
 
-/* Tipografia no Modo Claro: apenas em elementos fora dos botões vermelhos */
-.light .text-white:not([class*="bg-red-"]):not([class*="bg-red-"] *):not(.bg-red-600 *):not(.bg-red-500 *):not(.bg-emerald-500 *):not(.bg-emerald-600 *) {
+/* Tipografia no Modo Claro */
+.light .text-white {
   color: #18181b !important; /* Grafite escuro para títulos e textos principais */
 }
 
@@ -332,11 +326,6 @@ html.light body {
 .light .bg-cyan-500 {
   background-color: #dc2626 !important;
   color: #ffffff !important;
-}
-
-.light .bg-cyan-500:hover,
-.light .hover\:bg-cyan-400:hover {
-  background-color: #dc2626 !important;
 }
 
 .light .text-cyan-400,
@@ -449,43 +438,29 @@ html.light body {
 /* ══════════════════════════════════════════════════════════════════════════
    3. BOTÕES COM FUNDO VERMELHO: FONTE BRANCA E SEM MUDANÇA NO HOVER
    ══════════════════════════════════════════════════════════════════════════ */
-.light [class*="bg-red-600"],
-.light [class*="bg-red-600"] *,
-.light [class*="bg-red-500"],
-.light [class*="bg-red-500"] *,
-.light .bg-red-600,
-.light .bg-red-600 *,
-.light .bg-red-500,
-.light .bg-red-500 *,
-.dark [class*="bg-red-600"],
-.dark [class*="bg-red-600"] *,
-.dark [class*="bg-red-500"],
-.dark [class*="bg-red-500"] *,
-.dark .bg-red-600,
-.dark .bg-red-600 *,
-.dark .bg-red-500,
-.dark .bg-red-500 * {
+.light button.bg-red-600,
+.light button.bg-red-600 *,
+.light button.bg-red-500,
+.light button.bg-red-500 *,
+.light button.bg-emerald-500,
+.light button.bg-emerald-500 *,
+.dark button.bg-red-600,
+.dark button.bg-red-600 *,
+.dark button.bg-red-500,
+.dark button.bg-red-500 * {
   color: #ffffff !important;
   fill: #ffffff !important;
 }
 
-/* Ao passar mouse: NÃO mudar a cor de fundo e NÃO mudar a cor da fonte */
-.light [class*="bg-red-600"]:hover,
-.light [class*="bg-red-600"]:hover *,
-.light [class*="bg-red-500"]:hover,
-.light [class*="bg-red-500"]:hover *,
-.light .bg-red-600:hover,
-.light .bg-red-600:hover *,
-.light .bg-red-500:hover,
-.light .bg-red-500:hover *,
-.dark [class*="bg-red-600"]:hover,
-.dark [class*="bg-red-600"]:hover *,
-.dark [class*="bg-red-500"]:hover,
-.dark [class*="bg-red-500"]:hover *,
-.dark .bg-red-600:hover,
-.dark .bg-red-600:hover *,
-.dark .bg-red-500:hover,
-.dark .bg-red-500:hover * {
+/* Ao passar mouse nos botões vermelhos: NÃO mudar fundo nem fonte */
+.light button.bg-red-600:hover,
+.light button.bg-red-600:hover *,
+.light button.bg-red-500:hover,
+.light button.bg-red-500:hover *,
+.dark button.bg-red-600:hover,
+.dark button.bg-red-600:hover *,
+.dark button.bg-red-500:hover,
+.dark button.bg-red-500:hover * {
   background-color: #dc2626 !important;
   color: #ffffff !important;
   fill: #ffffff !important;
