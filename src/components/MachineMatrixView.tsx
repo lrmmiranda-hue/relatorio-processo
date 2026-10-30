@@ -130,79 +130,6 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Estilos específicos para Impressão A4 Paisagem (Otimizado para caber em 1 página) */}
-      <style>{`
-        @media print {
-          @page {
-            size: A4 landscape !important;
-            margin: 4mm 6mm !important;
-          }
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: #ffffff !important;
-            color: #000000 !important;
-          }
-          body * {
-            visibility: hidden !important;
-          }
-          #printable-matrix-report,
-          #printable-matrix-report * {
-            visibility: visible !important;
-          }
-          #printable-matrix-report {
-            display: block !important;
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: #ffffff !important;
-            color: #000000 !important;
-            page-break-after: avoid !important;
-            break-after: avoid !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .print-compact-table {
-            width: 100% !important;
-            table-layout: fixed !important;
-            border-collapse: collapse !important;
-          }
-          .print-compact-table thead {
-            display: table-header-group !important;
-          }
-          .print-compact-table tr {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-          }
-          .print-compact-table th,
-          .print-compact-table td {
-            padding: 2.5px 4px !important;
-            font-size: 7.5pt !important;
-            line-height: 1.15 !important;
-            border: 1px solid #64748b !important;
-            color: #000000 !important;
-            background: transparent !important;
-            word-break: break-word !important;
-          }
-          .print-compact-table th:first-child,
-          .print-compact-table td:first-child {
-            width: 18% !important;
-            font-weight: 800 !important;
-            text-align: left !important;
-          }
-          .print-compact-table th {
-            background-color: #e2e8f0 !important;
-            font-weight: 800 !important;
-            color: #0f172a !important;
-            font-size: 8pt !important;
-            text-align: center !important;
-          }
-        }
-      `}</style>
-
       {/* ── BARRA DE FILTROS DA MATRIZ (COMPACTA NO CELULAR E COMPLETA NO DESKTOP) ── */}
       {(() => {
         const hasActiveFilters = Boolean(
@@ -327,7 +254,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
       {/* ── TABELA MATRIZ DIÁRIA DE CÉLULAS X TURNOS (TELA + IMPRESSÃO) ── */}
       <div id="printable-matrix-report" className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         {/* Cabeçalho exclusivo para a impressão A4 (Reduzido e compacto) */}
-        <div className="hidden print:block p-2 border-b border-black mb-1.5">
+        <div className="print-header-banner hidden p-2 border-b border-black mb-1.5">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-sm font-black uppercase tracking-wider text-black">

@@ -931,7 +931,7 @@ export default function App() {
               />
             ) : (
               /* ── APONTAMENTOS DAS MÁQUINAS / CÉLULAS ── */
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+              <div className="edit-view-container bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-3 sm:space-y-4">
                 {/* Barra de Filtro das Máquinas e Busca Global em Todos os Relatórios */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-2.5 border-b border-slate-800">
                   <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -1206,7 +1206,7 @@ export default function App() {
 
       {/* ── VISUALIZAÇÃO DE IMPRESSÃO (Matriz Completa A4 Paisagem quando em modo de Edição) ── */}
       {report && viewMode === 'EDIT' && (
-        <div className="hidden print:block">
+        <div className="print-matrix-standalone hidden">
           <MachineMatrixView
             report={report}
             machinesList={allMachines}
