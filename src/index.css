@@ -559,8 +559,8 @@ button svg * {
 
 @media print {
   @page {
-    size: A4 landscape !important;
-    margin: 4mm 6mm !important;
+    size: landscape;
+    margin: 4mm 6mm;
   }
 
   /* Oculta tudo que não faz parte do relatório impresso */
@@ -577,13 +577,17 @@ button svg * {
     display: block !important;
   }
 
-  /* Reseta os fundos para papel branco puro e remove animações e transforms que quebram o print */
+  /* Reseta os fundos para papel branco puro e remove animações/transforms e flexbox que geram folha em branco */
   html,
   body,
   #root,
+  #root > div,
   .min-h-screen,
   main,
   .animate-fade-in {
+    display: block !important;
+    position: static !important;
+    float: none !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #000000 !important;
@@ -594,6 +598,7 @@ button svg * {
     max-width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
+    max-height: none !important;
     overflow: visible !important;
     transform: none !important;
     animation: none !important;
@@ -608,11 +613,25 @@ button svg * {
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
+    background-color: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* FORÇA TODOS OS TEXTOS A SEREM PRETOS NO PAPEL (Neutraliza o tema escuro que deixava texto branco no papel branco) */
+  #printable-matrix-report,
+  #printable-matrix-report *,
+  #printable-matrix-report td,
+  #printable-matrix-report th,
+  #printable-matrix-report span,
+  #printable-matrix-report div,
+  #printable-matrix-report p {
+    color: #000000 !important;
+    text-shadow: none !important;
+    -webkit-text-fill-color: #000000 !important;
   }
 
   /* Cabeçalho impresso A4 */
@@ -638,25 +657,32 @@ button svg * {
   }
   .print-compact-table th,
   .print-compact-table td {
-    padding: 2.5px 4px !important;
+    padding: 2px 3.5px !important;
     font-size: 7.5pt !important;
     line-height: 1.15 !important;
     border: 1px solid #64748b !important;
-    color: #000000 !important;
     background: transparent !important;
     word-break: break-word !important;
   }
+  /* Coluna da Célula / Peça enxuta e compacta */
   .print-compact-table th:first-child,
   .print-compact-table td:first-child {
-    width: 18% !important;
+    width: 13% !important;
     font-weight: 800 !important;
     text-align: left !important;
   }
   .print-compact-table th {
     background-color: #e2e8f0 !important;
     font-weight: 800 !important;
-    color: #0f172a !important;
     font-size: 8pt !important;
     text-align: center !important;
+  }
+
+  /* Badge da Peça na folha impressa: nítido e compacto */
+  .print-compact-table td:first-child span:last-child {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #94a3b8 !important;
+    padding: 0.5px 3px !important;
+    font-size: 7pt !important;
   }
 }
