@@ -283,7 +283,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
           <table className="w-full text-xs text-left border-collapse table-fixed print-compact-table">
             <thead>
               <tr className="bg-slate-950 border-b border-slate-800 text-slate-300 font-bold uppercase tracking-wider text-xs print:bg-gray-200 print:text-black">
-                <th className="py-2 px-2 w-28 sm:w-32 shrink-0 font-bold text-white print:text-black text-xs uppercase tracking-wider">
+                <th className="py-2 px-1.5 sm:px-2 w-[102px] sm:w-32 shrink-0 font-bold text-white print:text-black text-[11px] sm:text-xs font-sans uppercase tracking-wider">
                   Célula / Peça
                 </th>
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift1') && (
@@ -342,18 +342,18 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                           e.stopPropagation();
                           if (onEditMachine) onEditMachine(machine, selectedShiftFilter !== 'ALL' ? selectedShiftFilter : undefined);
                         }}
-                        className="py-1.5 px-2.5 font-mono print:text-black cursor-pointer"
+                        className="py-1 sm:py-1.5 px-1.5 sm:px-2.5 font-sans print:text-black cursor-pointer"
                         title="Clique duplo para editar esta célula"
                       >
-                        <div className="flex items-center gap-1.5 whitespace-nowrap">
-                          <span className="font-bold text-white print:text-black text-xs tracking-wide">
+                        <div className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
+                          <span className="font-bold text-white print:text-black text-[11px] sm:text-xs font-sans tracking-tight sm:tracking-wide">
                             {machine}
                           </span>
                           {(() => {
                             const part = getMachinePart(machine, selectedShiftFilter !== 'ALL' ? selectedShiftFilter : undefined);
                             if (!part) return null;
                             return (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 print:text-black print:bg-transparent print:border-none print:p-0 font-sans font-bold text-[10px] shrink-0">
+                              <span className="inline-flex items-center px-1 sm:px-1.5 py-0.5 rounded bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 print:text-black print:bg-transparent print:border-none print:p-0 font-sans font-bold text-[9px] sm:text-[10px] shrink-0">
                                 {part}
                               </span>
                             );
