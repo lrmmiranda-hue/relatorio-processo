@@ -17,12 +17,14 @@ interface MachineMatrixViewProps {
   onMachineFilterChange?: (machine: string) => void;
   onOpenMenu?: () => void;
   onClearFilters?: () => void;
+  onEditMachine?: (machine: string, shiftKey?: 'shift1' | 'shift2' | 'shift3') => void;
 }
 
 export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
   report,
   machinesList,
   onOpenEditShift,
+  onEditMachine,
   searchQuery: externalSearch,
   onSearchChange: setExternalSearch,
   onlyWithNotes: externalOnlyNotes,
@@ -107,7 +109,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
     });
   }, [machinesList, searchQuery, onlyWithNotes, selectedShiftFilter, selectedMachineFilter, report]);
 
-  const renderCellContent = (val: string, shiftKey: 'shift1' | 'shift2' | 'shift3') => {
+  const renderCellContent = (val: string, shiftKey: 'shift1' | 'shift2' | 'shift3', machine: string) => {
     const trimmed = (val || '').trim();
     if (!trimmed) {
       return (
@@ -119,9 +121,13 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
 
     return (
       <div 
-        onClick={() => onOpenEditShift && onOpenEditShift(shiftKey)}
-        className="font-sans text-[11px] whitespace-pre-wrap break-words text-slate-200 print:text-black font-normal leading-tight cursor-pointer uppercase"
-        title="Clique para abrir edição deste turno"
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          if (onEditMachine) onEditMachine(machine, shiftKey);
+          else if (onOpenEditShift) onOpenEditShift(shiftKey);
+        }}
+        className="font-sans text-[11px] whitespace-pre-wrap break-words text-slate-200 print:text-black font-normal leading-tight uppercase select-none cursor-pointer"
+        title="Clique duplo para editar esta célula"
       >
         {trimmed.toUpperCase()}
       </div>
@@ -322,12 +328,23 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                   return (
                     <tr
                       key={machine}
-                      className={`transition-colors ${
+                      onDoubleClick={() => {
+                        if (onEditMachine) onEditMachine(machine, selectedShiftFilter !== 'ALL' ? selectedShiftFilter : undefined);
+                      }}
+                      className={`transition-colors cursor-pointer ${
                         idx % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-900/90'
                       } hover:bg-slate-800/60 print:bg-transparent`}
+                      title="Clique duplo para editar esta célula"
                     >
                       {/* Célula e Peça no Modo Leitura (lado a lado na mesma linha) */}
-                      <td className="py-1.5 px-2.5 font-mono print:text-black">
+                      <td 
+                        onDoubleClick={(e) => {
+                          e.stopPropagation();
+                          if (onEditMachine) onEditMachine(machine, selectedShiftFilter !== 'ALL' ? selectedShiftFilter : undefined);
+                        }}
+                        className="py-1.5 px-2.5 font-mono print:text-black cursor-pointer"
+                        title="Clique duplo para editar esta célula"
+                      >
                         <div className="flex items-center gap-1.5 whitespace-nowrap">
                           <span className="font-bold text-white print:text-black text-xs tracking-wide">
                             {machine}
@@ -336,7 +353,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                             const part = getMachinePart(machine, selectedShiftFilter !== 'ALL' ? selectedShiftFilter : undefined);
                             if (!part) return null;
                             return (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 print:text-black print:bg-transparent print:border-none print:p-0 font-mono font-bold text-[10px] shrink-0">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 print:text-black print:bg-transparent print:border-none print:p-0 font-sans font-bold text-[10px] shrink-0">
                                 {part}
                               </span>
                             );
@@ -345,20 +362,41 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                       </td>
 
                       {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift1') && (
-                        <td className="py-1.5 px-2 border-l border-slate-800 print:border-gray-400">
-                          {renderCellContent(t1, 'shift1')}
+                        <td 
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            if (onEditMachine) onEditMachine(machine, 'shift1');
+                          }}
+                          className="py-1.5 px-2 border-l border-slate-800 print:border-gray-400 cursor-pointer"
+                          title="Clique duplo para editar no 1º Turno"
+                        >
+                          {renderCellContent(t1, 'shift1', machine)}
                         </td>
                       )}
 
                       {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift2') && (
-                        <td className="py-1.5 px-2 border-l border-slate-800 print:border-gray-400">
-                          {renderCellContent(t2, 'shift2')}
+                        <td 
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            if (onEditMachine) onEditMachine(machine, 'shift2');
+                          }}
+                          className="py-1.5 px-2 border-l border-slate-800 print:border-gray-400 cursor-pointer"
+                          title="Clique duplo para editar no 2º Turno"
+                        >
+                          {renderCellContent(t2, 'shift2', machine)}
                         </td>
                       )}
 
                       {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift3') && (
-                        <td className="py-1.5 px-2 border-l border-slate-800 print:border-gray-400">
-                          {renderCellContent(t3, 'shift3')}
+                        <td 
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            if (onEditMachine) onEditMachine(machine, 'shift3');
+                          }}
+                          className="py-1.5 px-2 border-l border-slate-800 print:border-gray-400 cursor-pointer"
+                          title="Clique duplo para editar no 3º Turno"
+                        >
+                          {renderCellContent(t3, 'shift3', machine)}
                         </td>
                       )}
                     </tr>

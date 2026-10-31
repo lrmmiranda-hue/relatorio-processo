@@ -444,7 +444,10 @@ export default function App() {
   const renderModeSelector = () => (
     <div className="flex items-center p-0.5 bg-slate-950 border border-slate-800 rounded-xl shrink-0">
       <button
-        onClick={() => setViewMode('READ')}
+        onClick={() => {
+          setViewMode('READ');
+          setSelectedMachineFilter('ALL');
+        }}
         className={`flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
           viewMode === 'READ'
             ? 'bg-red-600 text-white hover:bg-red-600 hover:text-white shadow-sm'
@@ -487,12 +490,12 @@ export default function App() {
         <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
       </button>
 
-      <div className="flex items-center px-1 text-red-400 font-mono font-bold text-[11px] sm:text-xs">
+      <div className="flex items-center px-1 text-red-400 font-sans font-bold text-[11px] sm:text-xs">
         <input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-mono text-red-400 focus:outline-none cursor-pointer border-none"
+          className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-sans text-red-400 focus:outline-none cursor-pointer border-none"
         />
       </div>
 
@@ -920,6 +923,29 @@ export default function App() {
                 onMachineFilterChange={setSelectedMachineFilter}
                 onOpenMenu={() => setIsMenuOpen(true)}
                 onClearFilters={handleClearFilters}
+                onEditMachine={(machine, sk) => {
+                  if (!userProfile) {
+                    setIsLoginModalOpen(true);
+                    return;
+                  }
+                  if (sk) {
+                    setActiveShift(sk);
+                  }
+                  setSelectedMachineFilter(machine);
+                  setViewMode('EDIT');
+                  setTimeout(() => {
+                    const card = document.querySelector(`[data-machine-card="${machine}"]`);
+                    if (card) {
+                      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      const textarea = card.querySelector('textarea') as HTMLTextAreaElement | null;
+                      if (textarea) {
+                        textarea.focus();
+                        const len = textarea.value.length;
+                        textarea.setSelectionRange(len, len);
+                      }
+                    }
+                  }, 120);
+                }}
                 onOpenEditShift={(sk) => {
                   if (!userProfile) {
                     setIsLoginModalOpen(true);
@@ -1057,6 +1083,7 @@ export default function App() {
                   return (
                     <div
                       key={machine}
+                      data-machine-card={machine}
                       className={`p-2 sm:p-2.5 rounded-xl border transition-all ${
                         hasVal
                           ? 'bg-white dark:bg-slate-950 border-cyan-500/40 dark:border-cyan-500/30 shadow-xs dark:shadow-md dark:shadow-cyan-950/20'
@@ -1070,8 +1097,8 @@ export default function App() {
                             {machine}
                           </span>
 
-                          {/* Badge da Peça no estilo âmbar idêntico ao modo leitura (sem P: e sem tooltip) */}
-                          <div className="flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono font-bold text-[10px] shrink-0">
+                          {/* Badge da Peça no estilo âmbar idêntico ao modo leitura (com fonte Inter) */}
+                          <div className="flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-sans font-bold text-[10px] shrink-0">
                             <input
                               type="text"
                               disabled={!canEdit}
@@ -1079,7 +1106,7 @@ export default function App() {
                               onChange={(e) => handlePartChange(machine, e.target.value)}
                               placeholder="0000"
                               maxLength={4}
-                              className="part-badge-input w-9 sm:w-10 bg-transparent text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400 uppercase focus:outline-none placeholder-amber-500/40 border-none p-0 text-center tracking-wider"
+                              className="part-badge-input w-9 sm:w-10 bg-transparent text-[10px] font-sans font-bold text-amber-600 dark:text-amber-400 uppercase focus:outline-none placeholder-amber-500/40 border-none p-0 text-center tracking-wider"
                             />
                           </div>
                         </div>
@@ -1125,17 +1152,19 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* Textarea para observações da máquina (sempre em letras maiúsculas) */}
+                      {/* Textarea para observações da máquina (borda vermelha dentro da caixa quando não preenchido) */}
                       <textarea
                         rows={2}
                         disabled={!canEdit}
                         value={val.toUpperCase()}
                         onChange={(e) => handleMachineChange(machine, e.target.value.toUpperCase())}
                         placeholder={canEdit ? 'SEM OCORRÊNCIAS OU DIGITE A ANOTAÇÃO...' : 'SEM OCORRÊNCIAS.'}
-                        className={`w-full p-2 rounded-lg border text-[11px] uppercase focus:outline-none resize-none custom-scrollbar ${
-                          canEdit
-                            ? 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:border-red-500'
-                            : 'bg-slate-100/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed'
+                        className={`w-full p-2 rounded-lg border text-[11px] uppercase focus:outline-none resize-none custom-scrollbar transition-colors ${
+                          !hasVal
+                            ? 'border-red-500 dark:border-red-500/80 bg-red-500/[0.04] dark:bg-red-500/10 text-slate-800 dark:text-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 placeholder-red-400/50 dark:placeholder-red-400/40'
+                            : canEdit
+                              ? 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:border-cyan-500'
+                              : 'bg-slate-100/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed'
                         }`}
                       />
 
