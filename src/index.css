@@ -12,6 +12,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Ícone do calendário do input date na mesma cor da fonte (#f87171 / red-400) */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(53%) sepia(68%) saturate(2878%) hue-rotate(331deg) brightness(99%) contrast(97%);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -185,11 +191,32 @@ html.dark body {
 }
 
 .dark input:focus,
-.dark select:focus,
-.dark textarea:focus {
+.dark select:focus {
   border-color: #dc2626 !important;
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25) !important;
+}
+
+/* Textareas: sem cor quando selecionado, apenas negrito neutro */
+.dark textarea:focus {
+  border-color: #a1a1aa !important;
+  border-width: 1.5px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Textareas sem preenchimento: borda vermelha fixa nítida para destacar */
+.dark textarea.unfilled-textarea {
+  border-color: #ef4444 !important;
+  border-width: 1.5px !important;
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+.dark textarea.unfilled-textarea:focus {
+  border-color: #ef4444 !important;
+  border-width: 2px !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .dark input::placeholder,
@@ -370,11 +397,32 @@ html.light body {
 
 .light input:focus,
 .light select:focus,
-.light textarea:focus,
 .light .filter-match-select:focus {
   border-color: #dc2626 !important;
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+}
+
+/* Textareas: sem cor quando selecionado, apenas negrito neutro */
+.light textarea:focus {
+  border-color: #4b5563 !important;
+  border-width: 1.5px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Textareas sem preenchimento: borda vermelha fixa nítida para destacar */
+.light textarea.unfilled-textarea {
+  border-color: #ef4444 !important;
+  border-width: 1.5px !important;
+  background-color: rgba(239, 68, 68, 0.04) !important;
+}
+
+.light textarea.unfilled-textarea:focus {
+  border-color: #dc2626 !important;
+  border-width: 2px !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .light input::placeholder,

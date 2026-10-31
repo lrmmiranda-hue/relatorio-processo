@@ -11,7 +11,6 @@ import {
   Search, 
   ChevronLeft, 
   ChevronRight, 
-  ShieldCheck, 
   Loader2, 
   FileText, 
   Eye, 
@@ -490,12 +489,12 @@ export default function App() {
         <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
       </button>
 
-      <div className="flex items-center px-1 text-red-400 font-sans font-bold text-[11px] sm:text-xs">
+      <div className="flex items-center px-1 text-red-400 font-sans font-normal text-[11px] sm:text-xs">
         <input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-bold font-sans text-red-400 focus:outline-none cursor-pointer border-none"
+          className="px-0 py-0.5 bg-transparent text-[11px] sm:text-xs font-normal font-sans text-red-400 focus:outline-none cursor-pointer border-none"
         />
       </div>
 
@@ -722,19 +721,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* ── BANNER DE STATUS / BLOQUEIO DE HORÁRIO (APENAS MODO PREENCHIMENTO) ── */}
-      {viewMode === 'EDIT' && (
+      {/* ── BANNER DE STATUS / BLOQUEIO DE HORÁRIO (APENAS MODO PREENCHIMENTO E OPERADORES) ── */}
+      {viewMode === 'EDIT' && !isAdmin && (
         <div className="no-print max-w-7xl mx-auto w-full px-4 pt-4">
-          {isAdmin ? (
-            <div className="flex items-center justify-between p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-red-500 shrink-0" />
-                <span>
-                  <strong>Acesso Administrativo:</strong> Você possui liberação irrestrita para editar e auditar qualquer turno e data.
-                </span>
-              </div>
-            </div>
-          ) : isShiftUnlocked ? (
+          {isShiftUnlocked ? (
             <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
               <div className="flex items-center gap-2">
                 <Unlock className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -1152,18 +1142,18 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* Textarea para observações da máquina (borda vermelha dentro da caixa quando não preenchido) */}
+                      {/* Textarea para observações da máquina: borda vermelha quando sem preenchimento, e borda negrito neutra sem cor quando selecionado */}
                       <textarea
                         rows={2}
                         disabled={!canEdit}
                         value={val.toUpperCase()}
                         onChange={(e) => handleMachineChange(machine, e.target.value.toUpperCase())}
                         placeholder={canEdit ? 'SEM OCORRÊNCIAS OU DIGITE A ANOTAÇÃO...' : 'SEM OCORRÊNCIAS.'}
-                        className={`w-full p-2 rounded-lg border text-[11px] uppercase focus:outline-none resize-none custom-scrollbar transition-colors ${
+                        className={`w-full p-2 rounded-lg border text-[11px] uppercase focus:outline-none resize-none custom-scrollbar transition-all ${
                           !hasVal
-                            ? 'border-red-500 dark:border-red-500/80 bg-red-500/[0.04] dark:bg-red-500/10 text-slate-800 dark:text-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 placeholder-red-400/50 dark:placeholder-red-400/40'
+                            ? 'unfilled-textarea border-red-500 dark:border-red-500/80 bg-red-500/[0.03] dark:bg-red-500/10 text-slate-800 dark:text-slate-200 focus:border-red-600 dark:focus:border-red-400'
                             : canEdit
-                              ? 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:border-cyan-500'
+                              ? 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:border-slate-800 dark:focus:border-slate-200'
                               : 'bg-slate-100/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed'
                         }`}
                       />
