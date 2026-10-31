@@ -33,46 +33,35 @@ export const db = initializeFirestore(
   firebaseConfig.firestoreDatabaseId
 );
 
-// Cache inteligente em memória para evitar leituras repetidas ao alternar datas
-let cachedDailyReportsSnap: { timestamp: number; docs: { id: string; data: DailyProcessReport }[] } | null = null;
-
 export function invalidateDailyReportsCache() {
-  cachedDailyReportsSnap = null;
+  // No-op mantido para compatibilidade
 }
 
-// Obtém as peças herdadas para a data (a partir do dia 26/10/2026, mantendo o dia anterior até alteração)
+// Obtém as peças herdadas para a data buscando ESTRITAMENTE do dia anterior (1 única leitura pontual)
 export async function getInheritedMachineParts(targetDate: string): Promise<Record<string, string>> {
   const partsAccumulator: Record<string, string> = { ...INITIAL_MACHINE_PARTS };
 
   try {
-    const now = Date.now();
-    let docsList: { id: string; data: DailyProcessReport }[] = [];
+    // Calcula o dia anterior no formato YYYY-MM-DD
+    const [y, m, d] = targetDate.split('-').map(Number);
+    const prevDate = new Date(Date.UTC(y, m - 1, d - 1, 12, 0, 0));
+    const prevDateStr = prevDate.toISOString().split('T')[0];
 
-    // Reutiliza cache em memória por até 2 minutos se não houver nova gravação
-    if (cachedDailyReportsSnap && (now - cachedDailyReportsSnap.timestamp < 120000)) {
-      docsList = cachedDailyReportsSnap.docs;
-    } else {
-      const snap = await getDocs(collection(db, 'daily_reports'));
-      docsList = snap.docs.map(d => ({ id: d.id, data: d.data() as DailyProcessReport }));
-      cachedDailyReportsSnap = { timestamp: now, docs: docsList };
-    }
+    // Busca pontualmente APENAS o documento do dia anterior (1 leitura direta)
+    const prevDocRef = doc(db, 'daily_reports', prevDateStr);
+    const snap = await getDoc(prevDocRef);
 
-    // Ordena as datas anteriores ou iguais a targetDate em ordem cronológica crescente
-    const sortedDocs = docsList
-      .filter(d => d.id <= targetDate && d.id >= '2026-10-26')
-      .sort((a, b) => a.id.localeCompare(b.id));
-
-    // Reproduz as atualizações de peças até a data alvo
-    for (const d of sortedDocs) {
-      if (d.data.machineParts) {
-        Object.entries(d.data.machineParts).forEach(([m, p]) => {
+    if (snap.exists()) {
+      const prevReport = snap.data() as DailyProcessReport;
+      if (prevReport.machineParts) {
+        Object.entries(prevReport.machineParts).forEach(([m, p]) => {
           if (p && String(p).trim()) {
             partsAccumulator[m] = String(p).trim();
           }
         });
       }
       for (const sk of ['shift1', 'shift2', 'shift3'] as const) {
-        const sParts = d.data.shifts?.[sk]?.machineParts;
+        const sParts = prevReport.shifts?.[sk]?.machineParts;
         if (sParts) {
           Object.entries(sParts).forEach(([m, p]) => {
             if (p && String(p).trim()) {
@@ -83,7 +72,7 @@ export async function getInheritedMachineParts(targetDate: string): Promise<Reco
       }
     }
   } catch (err) {
-    console.warn('Não foi possível calcular herança dinâmica de peças:', err);
+    console.warn('Não foi possível obter peças do dia anterior:', err);
   }
 
   return partsAccumulator;
