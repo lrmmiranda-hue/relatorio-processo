@@ -768,10 +768,10 @@ export default function App() {
       )}
 
       {/* ── CONTEÚDO PRINCIPAL ── */}
-      <main className="no-print flex-1 max-w-7xl mx-auto w-full px-3 sm:px-4 py-3 space-y-3">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-4 py-3 space-y-3">
         {/* ── PAINEL DE RESULTADOS DA BUSCA GLOBAL (TODOS OS RELATÓRIOS E DATAS) ── */}
         {hasSearchedGlobal && (
-          <div className="bg-slate-900 border border-red-500/40 rounded-2xl p-3.5 space-y-3 shadow-xl animate-fade-in">
+          <div className="no-print bg-slate-900 border border-red-500/40 rounded-2xl p-3.5 space-y-3 shadow-xl animate-fade-in">
             <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-red-500 shrink-0" />
@@ -882,7 +882,7 @@ export default function App() {
           <>
             {/* Aviso com a DATA FILTRADA e filtros em destaque (visível tanto no modo Leitura quanto no Preenchimento) */}
             {(searchQuery.trim() || filterOnlyWithNotes || selectedShiftFilter !== 'ALL' || selectedMachineFilter !== 'ALL' || selectedDate !== getLocalDateString()) && (
-              <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs animate-fade-in">
+              <div className="no-print flex items-center justify-between px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs animate-fade-in">
                 <div className="flex items-center gap-2 truncate">
                   <Filter className="w-3.5 h-3.5 shrink-0 text-red-500" />
                   <span className="truncate">

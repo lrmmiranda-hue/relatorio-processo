@@ -560,7 +560,7 @@ button svg * {
 @media print {
   @page {
     size: landscape;
-    margin: 4mm 6mm;
+    margin: 3mm 5mm;
   }
 
   /* Oculta tudo que não faz parte do relatório impresso */
@@ -604,8 +604,14 @@ button svg * {
     animation: none !important;
   }
 
-  /* Bloco principal da matriz na folha */
-  #printable-matrix-report {
+  /* Bloco principal da matriz na folha - 100% branco limpo */
+  .dark #printable-matrix-report,
+  .light #printable-matrix-report,
+  #printable-matrix-report,
+  .dark #printable-matrix-report div,
+  .light #printable-matrix-report div,
+  #printable-matrix-report div,
+  .overflow-x-auto {
     display: block !important;
     visibility: visible !important;
     position: static !important;
@@ -621,32 +627,21 @@ button svg * {
     print-color-adjust: exact !important;
   }
 
-  /* FORÇA TODOS OS TEXTOS A SEREM PRETOS NO PAPEL (Neutraliza o tema escuro que deixava texto branco no papel branco) */
-  #printable-matrix-report,
-  #printable-matrix-report *,
-  #printable-matrix-report td,
-  #printable-matrix-report th,
-  #printable-matrix-report span,
-  #printable-matrix-report div,
-  #printable-matrix-report p {
-    color: #000000 !important;
-    text-shadow: none !important;
-    -webkit-text-fill-color: #000000 !important;
-  }
-
-  /* Cabeçalho impresso A4 */
+  /* Cabeçalho impresso A4 - super compacto */
   .print-header-banner {
     display: block !important;
-    padding: 2px 0 6px 0 !important;
+    padding: 1px 0 3px 0 !important;
     border-bottom: 1.5px solid #000000 !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 3px !important;
   }
 
-  /* Tabela de impressão compacta A4 Paisagem */
+  /* Tabela de impressão compacta A4 Paisagem para caber perfeitamente em 1 página */
   .print-compact-table {
     width: 100% !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   .print-compact-table thead {
     display: table-header-group !important;
@@ -655,34 +650,97 @@ button svg * {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
-  .print-compact-table th,
-  .print-compact-table td {
-    padding: 2px 3.5px !important;
+
+  /* Todas as linhas do corpo: papel branco e sem zebra escura */
+  .dark #printable-matrix-report tbody tr,
+  .dark #printable-matrix-report tbody tr:nth-child(even),
+  .dark #printable-matrix-report tbody tr:hover,
+  .light #printable-matrix-report tbody tr,
+  .light #printable-matrix-report tbody tr:nth-child(even),
+  .light #printable-matrix-report tbody tr:hover,
+  #printable-matrix-report tbody tr,
+  #printable-matrix-report tbody tr:nth-child(even) {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Cabeçalhos da tabela */
+  .dark #printable-matrix-report thead tr,
+  .light #printable-matrix-report thead tr,
+  #printable-matrix-report thead tr {
+    background-color: #e2e8f0 !important;
+    border-bottom: 1.5px solid #000000 !important;
+  }
+
+  .dark #printable-matrix-report th,
+  .light #printable-matrix-report th,
+  #printable-matrix-report th,
+  .print-compact-table th {
+    background-color: #e2e8f0 !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    border: 1px solid #475569 !important;
+    padding: 2px 3px !important;
     font-size: 7.5pt !important;
-    line-height: 1.15 !important;
-    border: 1px solid #64748b !important;
-    background: transparent !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Células de dados compactas para garantir 1 página única */
+  .dark #printable-matrix-report td,
+  .light #printable-matrix-report td,
+  #printable-matrix-report td,
+  .print-compact-table td {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #94a3b8 !important;
+    padding: 1px 3px !important;
+    font-size: 6.8pt !important;
+    line-height: 1.1 !important;
     word-break: break-word !important;
   }
-  /* Coluna da Célula / Peça enxuta e compacta */
+
+  /* Coluna Célula / Peça: compacta */
+  .dark #printable-matrix-report th:first-child,
+  .light #printable-matrix-report th:first-child,
+  #printable-matrix-report th:first-child,
+  .dark #printable-matrix-report td:first-child,
+  .light #printable-matrix-report td:first-child,
+  #printable-matrix-report td:first-child,
   .print-compact-table th:first-child,
   .print-compact-table td:first-child {
-    width: 13% !important;
+    width: 12% !important;
     font-weight: 800 !important;
     text-align: left !important;
   }
-  .print-compact-table th {
-    background-color: #e2e8f0 !important;
-    font-weight: 800 !important;
-    font-size: 8pt !important;
-    text-align: center !important;
+
+  /* Força todos os textos a serem pretos legíveis */
+  .dark #printable-matrix-report *,
+  .light #printable-matrix-report *,
+  #printable-matrix-report *,
+  .dark #printable-matrix-report td div,
+  .light #printable-matrix-report td div,
+  #printable-matrix-report td div,
+  #printable-matrix-report td span,
+  #printable-matrix-report td p,
+  #printable-matrix-report th span {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    text-shadow: none !important;
   }
 
-  /* Badge da Peça na folha impressa: nítido e compacto */
-  .print-compact-table td:first-child span:last-child {
+  /* Badge da Peça no papel impresso */
+  #printable-matrix-report td:first-child span.inline-flex,
+  #printable-matrix-report td:first-child span:last-child {
     background-color: #f1f5f9 !important;
-    border: 1px solid #94a3b8 !important;
-    padding: 0.5px 3px !important;
-    font-size: 7pt !important;
+    border: 1px solid #64748b !important;
+    padding: 0 3px !important;
+    font-size: 6.5pt !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
   }
 }

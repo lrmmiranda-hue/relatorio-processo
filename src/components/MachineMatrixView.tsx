@@ -368,22 +368,6 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
             </tbody>
           </table>
         </div>
-
-        {/* Rodapé de Assinatura para Impressão (Compacto) */}
-        <div className="hidden print:grid grid-cols-3 gap-6 text-center text-[7pt] p-2 mt-2 border-t border-gray-400">
-          <div>
-            <div className="border-b border-black mb-0.5 h-4" />
-            <span className="font-bold">Visto 1º Turno</span>
-          </div>
-          <div>
-            <div className="border-b border-black mb-0.5 h-4" />
-            <span className="font-bold">Visto 2º Turno</span>
-          </div>
-          <div>
-            <div className="border-b border-black mb-0.5 h-4" />
-            <span className="font-bold">Visto 3º Turno / Supervisão</span>
-          </div>
-        </div>
       </div>
     </div>
   );
