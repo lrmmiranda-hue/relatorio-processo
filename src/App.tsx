@@ -50,6 +50,7 @@ import { PasswordUnlockModal } from './components/PasswordUnlockModal';
 import { LoginModal } from './components/LoginModal';
 import { MenuDrawer } from './components/MenuDrawer';
 import { MachineMatrixView } from './components/MachineMatrixView';
+import { UppercaseTextarea } from './components/UppercaseTextarea';
 
 const getEmptyShift = (): ShiftReport => ({
   operatorName: '',
@@ -1143,13 +1144,13 @@ export default function App() {
                       </div>
 
                       {/* Textarea para observações da máquina: borda vermelha quando sem preenchimento, e borda negrito neutra sem cor quando selecionado */}
-                      <textarea
+                      <UppercaseTextarea
                         rows={2}
                         disabled={!canEdit}
-                        value={val.toUpperCase()}
-                        onChange={(e) => handleMachineChange(machine, e.target.value.toUpperCase())}
+                        value={val}
+                        onValueChange={(newVal) => handleMachineChange(machine, newVal)}
                         placeholder={canEdit ? 'SEM OCORRÊNCIAS OU DIGITE A ANOTAÇÃO...' : 'SEM OCORRÊNCIAS.'}
-                        className={`w-full p-2 rounded-lg border text-[11px] uppercase focus:outline-none resize-none custom-scrollbar transition-all ${
+                        className={`w-full p-2 rounded-lg border text-[11px] focus:outline-none resize-none custom-scrollbar transition-all ${
                           !hasVal
                             ? 'unfilled-textarea border-red-500 dark:border-red-500/80 bg-red-500/[0.03] dark:bg-red-500/10 text-slate-800 dark:text-slate-200 focus:border-red-600 dark:focus:border-red-400'
                             : canEdit
