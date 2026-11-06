@@ -4,7 +4,6 @@ import {
   Save, 
   Lock, 
   Unlock, 
-  KeyRound, 
   CheckCircle2, 
   Check,
   Trash2, 
@@ -46,7 +45,6 @@ import {
 } from './shiftUtils';
 import type { ShiftKey } from './shiftUtils';
 import { DEFAULT_MACHINES, INITIAL_MACHINE_PARTS, sanitizePartCode } from './constants/machines';
-import { PasswordUnlockModal } from './components/PasswordUnlockModal';
 import { LoginModal } from './components/LoginModal';
 import { MenuDrawer } from './components/MenuDrawer';
 import { MachineMatrixView } from './components/MachineMatrixView';
@@ -76,14 +74,6 @@ export default function App() {
   const [, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
-  // Desbloqueio de turnos fora do horário com senha
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [unlockedShifts, setUnlockedShifts] = useState<Record<ShiftKey, boolean>>({
-    shift1: false,
-    shift2: false,
-    shift3: false
-  });
 
   // Tema da Interface: Modo Escuro vs Modo Claro
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -188,6 +178,16 @@ export default function App() {
         if (profile) {
           setUserProfile(profile);
           localStorage.setItem('relatorio_processo_active_user', JSON.stringify(profile));
+        } else {
+          const fallbackProfile: UserProfile = {
+            id: user.uid,
+            email: user.email || '',
+            role: 'ADMIN',
+            name: user.displayName || user.email?.split('@')[0] || 'Administrador',
+            username: user.email?.split('@')[0] || 'admin'
+          };
+          setUserProfile(fallbackProfile);
+          localStorage.setItem('relatorio_processo_active_user', JSON.stringify(fallbackProfile));
         }
       } else {
         if (!localStorage.getItem('relatorio_processo_active_user')) {
@@ -329,12 +329,10 @@ export default function App() {
       return true;
     });
   }, [allMachines, selectedMachineFilter, searchQuery, filterOnlyWithNotes, report, activeShift]);
-
-  // Regra de Permissão de Edição
-  const isAdmin = userProfile?.role === 'ADMIN';
+  // Regra de Permissão de Edição: Liberado sempre para ADMIN e dentro do horário para operadores
+  const isAdmin = userProfile?.role === 'ADMIN' || Boolean(auth.currentUser);
   const isTimeActive = isShiftTimeActive(activeShift, selectedDate, currentTime);
-  const isShiftUnlocked = unlockedShifts[activeShift] === true;
-  const canEdit = isAdmin || isTimeActive || isShiftUnlocked;
+  const canEdit = isAdmin || isTimeActive;
 
   // Salvamento Automático: Salva no Firebase 1.2 segundos após o usuário terminar de digitar
   useEffect(() => {
@@ -528,7 +526,6 @@ export default function App() {
         const cfg = SHIFTS_CONFIG[sk];
         const isSelected = activeShift === sk;
         const isNow = isShiftTimeActive(sk, selectedDate, currentTime);
-        const isUnlocked = unlockedShifts[sk];
         const shiftLabels: Record<ShiftKey, string> = {
           shift1: '1º Turno',
           shift2: '2º Turno',
@@ -561,12 +558,12 @@ export default function App() {
                 className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"
                 title="Turno em andamento no momento"
               />
-            ) : isAdmin || isUnlocked ? (
-              <span title="Edição liberada pelo administrador" className="shrink-0">
-                <Unlock className={`w-2.5 h-2.5 ${isSelected ? 'text-white' : 'text-red-500'}`} />
+            ) : isAdmin ? (
+              <span title="Edição liberada para Administrador" className="shrink-0">
+                <Unlock className={`w-2.5 h-2.5 ${isSelected ? 'text-white' : 'text-emerald-500'}`} />
               </span>
             ) : (
-              <span title="Fora do horário do turno" className="shrink-0">
+              <span title="Fora do horário do turno (Edição bloqueada)" className="shrink-0">
                 <Lock className={`w-2.5 h-2.5 ${isSelected ? 'text-white/80' : 'text-slate-400'}`} />
               </span>
             )}
@@ -722,17 +719,15 @@ export default function App() {
         </div>
       </header>
 
-      {/* ── BANNER DE STATUS / BLOQUEIO DE HORÁRIO (APENAS MODO PREENCHIMENTO E OPERADORES) ── */}
-      {viewMode === 'EDIT' && !isAdmin && (
+      {/* ── BANNER DE STATUS / BLOQUEIO DE HORÁRIO ── */}
+      {viewMode === 'EDIT' && (
         <div className="no-print max-w-7xl mx-auto w-full px-4 pt-4">
-          {isShiftUnlocked ? (
-            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
-              <div className="flex items-center gap-2">
-                <Unlock className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>
-                  <strong>Edição Desbloqueada por Senha:</strong> Este turno ({SHIFTS_CONFIG[activeShift].name}) está temporariamente liberado para edição.
-                </span>
-              </div>
+          {isAdmin ? (
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs">
+              <Unlock className="w-4 h-4 text-blue-400 shrink-0" />
+              <span>
+                <strong>Modo Administrador:</strong> Edição liberada irrestrita ({SHIFTS_CONFIG[activeShift].name}).
+              </span>
             </div>
           ) : isTimeActive ? (
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs">
@@ -742,20 +737,11 @@ export default function App() {
               </span>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs animate-fade-in">
-              <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                <div>
-                  <strong>Edição Bloqueada:</strong> Este turno está fora do horário permitido de preenchimento ({SHIFTS_CONFIG[activeShift].description}).
-                </div>
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs animate-fade-in">
+              <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+              <div>
+                <strong>Edição Bloqueada:</strong> Este turno está fora do horário permitido de preenchimento ({SHIFTS_CONFIG[activeShift].description}). Edição fora do horário é restrita a administradores.
               </div>
-              <button
-                onClick={() => setIsPasswordModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-amber-400/20 shrink-0"
-              >
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>Liberar com Senha</span>
-              </button>
             </div>
           )}
         </div>
@@ -1184,17 +1170,6 @@ export default function App() {
     </main>
 
       {/* ── MODAIS ── */}
-      <PasswordUnlockModal
-        isOpen={isPasswordModalOpen}
-        shiftName={SHIFTS_CONFIG[activeShift].name}
-        onSuccess={() => {
-          setUnlockedShifts({
-            ...unlockedShifts,
-            [activeShift]: true
-          });
-        }}
-        onClose={() => setIsPasswordModalOpen(false)}
-      />
 
       <LoginModal
         isOpen={isLoginModalOpen}

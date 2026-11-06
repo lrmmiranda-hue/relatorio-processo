@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { DailyProcessReport } from '../types';
 import { Search, FileText, Printer } from 'lucide-react';
 import { INITIAL_MACHINE_PARTS } from '../constants/machines';
+import { SHIFTS_CONFIG } from '../shiftUtils';
 
 interface MachineMatrixViewProps {
   report: DailyProcessReport;
@@ -289,7 +290,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift1') && (
                   <th 
                     className="py-2 px-2 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-xs uppercase tracking-wider text-center"
-                    title="1º Turno (05:00 - 14:18)"
+                    title={`${SHIFTS_CONFIG.shift1.name} (${SHIFTS_CONFIG.shift1.description})`}
                   >
                     1º Turno
                   </th>
@@ -297,7 +298,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift2') && (
                   <th 
                     className="py-2 px-2 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-xs uppercase tracking-wider text-center"
-                    title="2º Turno (14:18 - 23:25)"
+                    title={`${SHIFTS_CONFIG.shift2.name} (${SHIFTS_CONFIG.shift2.description})`}
                   >
                     2º Turno
                   </th>
@@ -305,7 +306,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
                 {(selectedShiftFilter === 'ALL' || selectedShiftFilter === 'shift3') && (
                   <th 
                     className="py-2 px-2 border-l border-slate-800 print:border-gray-400 font-bold text-slate-300 print:text-black text-xs uppercase tracking-wider text-center"
-                    title="3º Turno (23:25 - 05:00)"
+                    title={`${SHIFTS_CONFIG.shift3.name} (${SHIFTS_CONFIG.shift3.description})`}
                   >
                     3º Turno
                   </th>

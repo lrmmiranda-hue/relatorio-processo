@@ -12,27 +12,25 @@ export const SHIFTS_CONFIG: Record<ShiftKey, ShiftInfo> = {
   shift1: {
     key: 'shift1',
     name: '1º Turno',
-    startTime: '05:00',
-    endTime: '14:18',
-    description: '05:00 às 14:18'
+    startTime: '06:00',
+    endTime: '14:00',
+    description: '06:00 às 14:00'
   },
   shift2: {
     key: 'shift2',
     name: '2º Turno',
-    startTime: '14:18',
-    endTime: '23:25',
-    description: '14:18 às 23:25'
+    startTime: '14:00',
+    endTime: '23:00',
+    description: '14:00 às 23:00'
   },
   shift3: {
     key: 'shift3',
     name: '3º Turno',
-    startTime: '23:25',
-    endTime: '05:00',
-    description: '23:25 às 05:00'
+    startTime: '22:18',
+    endTime: '06:30',
+    description: '22:18 às 06:30'
   }
 };
-
-export const MASTER_PASSWORD = 'admin123';
 
 /**
  * Retorna a data no formato YYYY-MM-DD no fuso horário local
@@ -47,7 +45,7 @@ export function getLocalDateString(d: Date = new Date()): string {
 /**
  * Converte HH:mm em minutos desde o início do dia
  */
-function timeToMinutes(timeStr: string): number {
+export function timeToMinutes(timeStr: string): number {
   const [h, m] = timeStr.split(':').map(Number);
   return h * 60 + m;
 }
@@ -64,24 +62,24 @@ export function isShiftTimeActive(shiftKey: ShiftKey, targetDateStr: string, now
   const endMin = timeToMinutes(cfg.endTime);
 
   if (shiftKey === 'shift1') {
-    // 05:00 - 14:18 (mesmo dia)
+    // 06:00 - 14:00 (mesmo dia)
     if (targetDateStr !== currentDateStr) return false;
     return currentMinutes >= startMin && currentMinutes < endMin;
   }
 
   if (shiftKey === 'shift2') {
-    // 14:18 - 23:25 (mesmo dia)
+    // 14:00 - 23:00 (mesmo dia)
     if (targetDateStr !== currentDateStr) return false;
     return currentMinutes >= startMin && currentMinutes < endMin;
   }
 
   if (shiftKey === 'shift3') {
-    // 23:25 às 05:00 (atravessa a meia-noite)
+    // 22:18 às 06:30 (atravessa a meia-noite)
     if (currentMinutes >= startMin) {
-      // 23:25 até 23:59 -> a data é a de hoje
+      // 22:18 até 23:59 -> a data do turno é a de hoje
       return targetDateStr === currentDateStr;
     } else if (currentMinutes < endMin) {
-      // 00:00 até 05:00 -> a data pode ser considerada a de ontem (início do turno) ou a de hoje
+      // 00:00 até 06:30 -> a data pode ser considerada a de ontem (início da noite de trabalho) ou a de hoje
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = getLocalDateString(yesterday);
@@ -98,10 +96,10 @@ export function isShiftTimeActive(shiftKey: ShiftKey, targetDateStr: string, now
  */
 export function getCurrentActiveShift(now: Date = new Date()): ShiftKey {
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  if (currentMinutes >= timeToMinutes('05:00') && currentMinutes < timeToMinutes('14:18')) {
+  if (currentMinutes >= timeToMinutes('06:00') && currentMinutes < timeToMinutes('14:00')) {
     return 'shift1';
   }
-  if (currentMinutes >= timeToMinutes('14:18') && currentMinutes < timeToMinutes('23:25')) {
+  if (currentMinutes >= timeToMinutes('14:00') && currentMinutes < timeToMinutes('22:18')) {
     return 'shift2';
   }
   return 'shift3';
