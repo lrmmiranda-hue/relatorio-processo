@@ -158,7 +158,7 @@ export const MachineMatrixView: React.FC<MachineMatrixViewProps> = ({
         };
 
         return (
-          <div className="no-print">
+          <div className="no-print print:hidden">
             {/* Versão Celular: Exibe apenas se houver filtros ativos */}
             {hasActiveFilters ? (
               <div className="sm:hidden flex items-center justify-between px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px] mb-1">
